@@ -5,6 +5,7 @@ const {
   GITHUB_TOKEN,
   GIST_ID,
   EMAILJS_PUBLIC_KEY,
+  EMAILJS_PRIVATE_KEY,
   EMAILJS_SERVICE_ID,
   EMAILJS_REMINDER_TEMPLATE_ID,
   TIMEZONE
@@ -15,14 +16,16 @@ console.log('🔐 ===== CEK SECRETS =====');
 console.log('GIST_ID:', GIST_ID ? GIST_ID.substring(0, 10) + '...' : '❌ KOSONG');
 console.log('GITHUB_TOKEN:', GITHUB_TOKEN ? '✅ Ada (length: ' + GITHUB_TOKEN.length + ')' : '❌ KOSONG');
 console.log('EMAILJS_PUBLIC_KEY:', EMAILJS_PUBLIC_KEY ? '✅ Ada' : '❌ KOSONG');
+console.log('EMAILJS_PRIVATE_KEY:', EMAILJS_PRIVATE_KEY ? '✅ Ada (length: ' + EMAILJS_PRIVATE_KEY.length + ')' : '❌ KOSONG');
 console.log('EMAILJS_SERVICE_ID:', EMAILJS_SERVICE_ID ? '✅ Ada' : '❌ KOSONG');
 console.log('EMAILJS_REMINDER_TEMPLATE_ID:', EMAILJS_REMINDER_TEMPLATE_ID ? '✅ Ada' : '❌ KOSONG');
-console.log('TIMEZONE:', TIMEZONE || 'Asia/Makassar (default)');
+console.log('TIMEZONE:', TIMEZONE || 'Asia/Makassar');
 console.log('========================\n');
 
+// Inisialisasi dengan Public Key DAN Private Key
 emailjs.init({
   publicKey: EMAILJS_PUBLIC_KEY,
-  privateKey: process.env.EMAILJS_PRIVATE_KEY
+  privateKey: EMAILJS_PRIVATE_KEY
 });
 
 // ========== TIMEZONE UTILITIES ==========
@@ -103,15 +106,12 @@ async function updateGist(state) {
       const [h, m] = reminder.time.split(':').map(Number);
       const reminderMinutes = h * 60 + m;
 
-      console.log(`⏰ Cek reminder ${reminder.time}: reminderMinutes=${reminderMinutes}, currentMinutes=${currentMinutes}, selisih=${reminderMinutes - currentMinutes}`);
-
       // Cek dalam rentang 5 menit terakhir
       if (reminderMinutes <= currentMinutes && reminderMinutes > currentMinutes - 5) {
         if (reminder.lastSent !== todayStr) {
           reminder.lastSent = todayStr;
           modified = true;
 
-          // Kirim via EmailJS
           try {
             const templateParams = {
               player_name: state.playerName || 'Player',
@@ -119,8 +119,7 @@ async function updateGist(state) {
               time: reminder.time
             };
             
-            console.log(`📧 Mencoba kirim email ke ${EMAILJS_REMINDER_TEMPLATE_ID}`);
-            console.log(`   Parameter: player_name="${templateParams.player_name}", message="${templateParams.reminder_message}", time="${templateParams.time}"`);
+            console.log(`📧 Mengirim email ke ${EMAILJS_REMINDER_TEMPLATE_ID}...`);
             
             const result = await emailjs.send(
               EMAILJS_SERVICE_ID, 
@@ -130,16 +129,13 @@ async function updateGist(state) {
             console.log(`✅ Reminder ${reminder.time} terkirim via email (status: ${result.status})`);
           } catch(err) {
             console.log(`❌ Gagal kirim reminder ${reminder.time}:`);
-            console.log(`   Message: ${err.message}`);
-            console.log(`   Status: ${err.status}`);
-            console.log(`   Text: ${err.text || 'tidak ada'}`);
-            if (err.response) console.log(`   Response:`, err.response.data);
+            console.log(`   Message: ${err.message || 'tidak ada'}`);
+            console.log(`   Status: ${err.status || 'tidak ada'}`);
+            if (err.text) console.log(`   Text: ${err.text}`);
           }
         } else {
           console.log(`⏭ Reminder ${reminder.time} sudah dikirim hari ini, skip`);
         }
-      } else {
-        console.log(`⏳ Reminder ${reminder.time} belum waktunya (selisih ${reminderMinutes - currentMinutes} menit)`);
       }
     }
 
