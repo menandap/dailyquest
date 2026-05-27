@@ -781,27 +781,7 @@
         console.log('❌ Telegram gagal:', e);
       }
     }
-    const TELEGRAM_BOT_TOKEN = "8832821759:AAHVt3CvrYpJlH6OKFfculQ0N3fiA8UVdGs";
-    const TELEGRAM_CHAT_ID = "1196496344"; // Ganti dengan chat ID kamu
 
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-    const text = `⚔️ Solo Leveling Reminder\n\n${message}\n\n🕐 ${getCurrentTimeString()} WITA`;
-
-    try {
-      await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHAT_ID,
-          text: text,
-          parse_mode: 'HTML'
-        })
-      });
-      console.log('✅ Telegram terkirim');
-    } catch (e) {
-      console.log('❌ Telegram gagal:', e);
-    }
-    }
     emailjs.init(EMAILJS_PUBLIC_KEY);
     // ==============================================
 
