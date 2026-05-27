@@ -81,6 +81,7 @@ async function updateGist(state) {
 
     console.log(`🕐 Waktu sekarang: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} WITA`);
     console.log(`📅 Hari ini: ${['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][today]}, ${todayStr}`);
+    console.log(`📋 Total reminder: ${state.reminders.length}`);
 
     for (const reminder of state.reminders) {
       if (!reminder.enabled) continue;
@@ -109,8 +110,6 @@ async function updateGist(state) {
         } else {
           console.log(`⏭ Reminder ${reminder.time} sudah dikirim hari ini, skip`);
         }
-      } else {
-        console.log(`⏳ Reminder ${reminder.time} belum waktunya (sekarang ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')})`);
       }
     }
 
