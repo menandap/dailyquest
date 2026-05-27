@@ -10,6 +10,16 @@ const {
   TIMEZONE
 } = process.env;
 
+// ========== DEBUG: Cek semua secrets ==========
+console.log('🔐 ===== CEK SECRETS =====');
+console.log('GIST_ID:', GIST_ID ? GIST_ID.substring(0, 10) + '...' : '❌ KOSONG');
+console.log('GITHUB_TOKEN:', GITHUB_TOKEN ? '✅ Ada (length: ' + GITHUB_TOKEN.length + ')' : '❌ KOSONG');
+console.log('EMAILJS_PUBLIC_KEY:', EMAILJS_PUBLIC_KEY ? '✅ Ada' : '❌ KOSONG');
+console.log('EMAILJS_SERVICE_ID:', EMAILJS_SERVICE_ID ? '✅ Ada' : '❌ KOSONG');
+console.log('EMAILJS_REMINDER_TEMPLATE_ID:', EMAILJS_REMINDER_TEMPLATE_ID ? '✅ Ada' : '❌ KOSONG');
+console.log('TIMEZONE:', TIMEZONE || 'Asia/Makassar (default)');
+console.log('========================\n');
+
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
 // ========== TIMEZONE UTILITIES ==========
@@ -73,10 +83,10 @@ async function updateGist(state) {
       return;
     }
 
-    const now = getNowInTimezone(TIMEZONE);
+    const now = getNowInTimezone(TIMEZONE || 'Asia/Makassar');
     const today = now.getDay();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
-    const todayStr = getTodayStr(TIMEZONE);
+    const todayStr = getTodayStr(TIMEZONE || 'Asia/Makassar');
     let modified = false;
 
     console.log(`🕐 Waktu sekarang: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} WITA`);
@@ -90,6 +100,8 @@ async function updateGist(state) {
       const [h, m] = reminder.time.split(':').map(Number);
       const reminderMinutes = h * 60 + m;
 
+      console.log(`⏰ Cek reminder ${reminder.time}: reminderMinutes=${reminderMinutes}, currentMinutes=${currentMinutes}, selisih=${reminderMinutes - currentMinutes}`);
+
       // Cek dalam rentang 5 menit terakhir
       if (reminderMinutes <= currentMinutes && reminderMinutes > currentMinutes - 5) {
         if (reminder.lastSent !== todayStr) {
@@ -98,18 +110,33 @@ async function updateGist(state) {
 
           // Kirim via EmailJS
           try {
-            await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_REMINDER_TEMPLATE_ID, {
+            const templateParams = {
               player_name: state.playerName || 'Player',
               reminder_message: reminder.message,
               time: reminder.time
-            });
-            console.log(`✅ Reminder ${reminder.time} terkirim via email`);
+            };
+            
+            console.log(`📧 Mencoba kirim email ke ${EMAILJS_REMINDER_TEMPLATE_ID}`);
+            console.log(`   Parameter: player_name="${templateParams.player_name}", message="${templateParams.reminder_message}", time="${templateParams.time}"`);
+            
+            const result = await emailjs.send(
+              EMAILJS_SERVICE_ID, 
+              EMAILJS_REMINDER_TEMPLATE_ID, 
+              templateParams
+            );
+            console.log(`✅ Reminder ${reminder.time} terkirim via email (status: ${result.status})`);
           } catch(err) {
-            console.log(`❌ Gagal kirim reminder ${reminder.time}:`, err.message);
+            console.log(`❌ Gagal kirim reminder ${reminder.time}:`);
+            console.log(`   Message: ${err.message}`);
+            console.log(`   Status: ${err.status}`);
+            console.log(`   Text: ${err.text || 'tidak ada'}`);
+            if (err.response) console.log(`   Response:`, err.response.data);
           }
         } else {
           console.log(`⏭ Reminder ${reminder.time} sudah dikirim hari ini, skip`);
         }
+      } else {
+        console.log(`⏳ Reminder ${reminder.time} belum waktunya (selisih ${reminderMinutes - currentMinutes} menit)`);
       }
     }
 
