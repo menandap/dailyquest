@@ -1,10 +1,18 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Solo Leveling - Daily Quest by Menandap</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+  </script>
+  <!-- Di bawah script chart.js, tambahkan ini -->
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  <script>
+    (function () {
+      emailjs.init("YOUR_PUBLIC_KEY"); // Ganti dengan Public Key kamu
+    })();
   </script>
   <style>
     :root {
@@ -16,7 +24,13 @@
       --gold: #ffd966;
       --danger: #ff8888;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
     body {
       background: var(--bg);
       font-family: 'Segoe UI', 'Courier New', monospace;
@@ -26,6 +40,7 @@
       display: flex;
       justify-content: center;
     }
+
     .app {
       max-width: 900px;
       width: 100%;
@@ -35,6 +50,7 @@
       box-shadow: 0 0 30px #3a3aff33;
       padding: 25px;
     }
+
     .title {
       text-align: center;
       font-size: 2rem;
@@ -43,6 +59,7 @@
       text-shadow: 0 0 12px #6a4aff;
       margin-bottom: 5px;
     }
+
     .subtitle {
       text-align: center;
       font-size: 0.9rem;
@@ -59,6 +76,7 @@
       flex-wrap: wrap;
       align-items: center;
     }
+
     .tab-btn {
       background: #2a2a50;
       border: 1px solid #6a6aff;
@@ -72,11 +90,16 @@
       font-family: inherit;
       white-space: nowrap;
     }
+
     .tab-btn.active {
       background: #4a4a8a;
       box-shadow: 0 0 15px #6a6aff;
     }
-    .tab-btn:hover { background: #3d3d7a; }
+
+    .tab-btn:hover {
+      background: #3d3d7a;
+    }
+
     .sync-status {
       margin-left: auto;
       font-size: 0.85rem;
@@ -85,7 +108,11 @@
       background: #1a2a1a;
       color: #88ff88;
     }
-    .sync-status.offline { background: #2a1a1a; color: #ff8888; }
+
+    .sync-status.offline {
+      background: #2a1a1a;
+      color: #ff8888;
+    }
 
     .player-row {
       display: flex;
@@ -98,8 +125,14 @@
       border: 1px solid var(--border);
       flex-wrap: wrap;
     }
-    .player-row label { font-weight: bold; color: #afafff; }
-    .player-row input, .player-row select {
+
+    .player-row label {
+      font-weight: bold;
+      color: #afafff;
+    }
+
+    .player-row input,
+    .player-row select {
       background: #0b0b1a;
       border: 1px solid #5a5aaa;
       color: #e0e0ff;
@@ -107,32 +140,44 @@
       border-radius: 6px;
       font-family: inherit;
     }
-    .player-row input { width: 150px; }
-    .player-row select { width: auto; }
+
+    .player-row input {
+      width: 150px;
+    }
+
+    .player-row select {
+      width: auto;
+    }
+
     .badge {
       padding: 6px 16px;
       border-radius: 20px;
       font-weight: bold;
       font-size: 0.9rem;
     }
+
     .level-box {
       background: #2a2a50;
       color: var(--gold);
       text-shadow: 0 0 8px #ffaa00;
     }
+
     .streak-box {
       background: #2a1a1a;
       color: #ffaa66;
     }
+
     .exp-box {
       background: #1a1a2a;
       color: #aaccff;
     }
+
     .time-box {
       background: #1a2a2a;
       color: #88ccff;
       font-size: 0.8rem;
     }
+
     .notif-status-box {
       background: #1a2a1a;
       color: #88ff88;
@@ -140,6 +185,7 @@
       padding: 4px 12px;
       border-radius: 20px;
     }
+
     .notif-status-box.disabled {
       background: #2a1a1a;
       color: #ff8888;
@@ -152,6 +198,7 @@
       padding: 20px;
       margin-bottom: 20px;
     }
+
     .panel h2 {
       font-size: 1.3rem;
       color: #c8b8ff;
@@ -160,9 +207,18 @@
       align-items: center;
       gap: 8px;
     }
-    .hidden { display: none; }
 
-    .quest-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .hidden {
+      display: none;
+    }
+
+    .quest-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .quest-item {
       display: flex;
       align-items: center;
@@ -173,11 +229,13 @@
       border: 1px solid #38386a;
       transition: all 0.2s;
     }
+
     .quest-item.completed {
       opacity: 0.7;
       background: #1a2a1a;
       border-color: #3a6a3a;
     }
+
     .quest-check {
       width: 24px;
       height: 24px;
@@ -185,8 +243,16 @@
       cursor: pointer;
       transform: scale(1.3);
     }
-    .quest-check:disabled { accent-color: #4a4; }
-    .quest-text { flex: 1; font-size: 0.95rem; }
+
+    .quest-check:disabled {
+      accent-color: #4a4;
+    }
+
+    .quest-text {
+      flex: 1;
+      font-size: 0.95rem;
+    }
+
     .quest-day-badge {
       background: #3e3e70;
       padding: 2px 10px;
@@ -195,6 +261,7 @@
       font-weight: bold;
       color: #aaccff;
     }
+
     .stat-badge {
       background: #3e3e70;
       padding: 2px 10px;
@@ -210,7 +277,13 @@
       gap: 10px;
       margin-bottom: 10px;
     }
-    .stat-label { width: 80px; font-weight: bold; color: #ccccff; }
+
+    .stat-label {
+      width: 80px;
+      font-weight: bold;
+      color: #ccccff;
+    }
+
     .stat-bar-bg {
       flex: 1;
       height: 18px;
@@ -219,18 +292,21 @@
       overflow: hidden;
       border: 1px solid var(--border);
     }
+
     .stat-bar-fill {
       height: 100%;
       background: linear-gradient(90deg, #6a4aff, #b040ff);
       box-shadow: 0 0 12px #aa66ff;
       transition: width 0.5s;
     }
+
     .stat-value {
       width: 50px;
       text-align: right;
       font-weight: bold;
       color: #f0d0ff;
     }
+
     .exp-area {
       display: flex;
       align-items: center;
@@ -241,7 +317,12 @@
       border-radius: 10px;
       border: 1px solid var(--border);
     }
-    .exp-label { font-weight: bold; color: #ffcc88; }
+
+    .exp-label {
+      font-weight: bold;
+      color: #ffcc88;
+    }
+
     .exp-bar-bg {
       flex: 1;
       height: 14px;
@@ -249,6 +330,7 @@
       border-radius: 20px;
       overflow: hidden;
     }
+
     .exp-bar-fill {
       height: 100%;
       background: #ffbb33;
@@ -271,17 +353,48 @@
       align-items: center;
       gap: 6px;
     }
+
     .btn:hover {
       background: #3d3d7a;
       box-shadow: 0 0 20px #6a6aff;
     }
-    .btn.danger { border-color: #aa4a4a; color: #ffaaaa; }
-    .btn.danger:hover { background: #5a2a2a; }
-    .btn.small { padding: 6px 12px; font-size: 0.8rem; }
-    .btn.primary { background: #3a3a8a; border-color: #8a8aff; }
-    .btn.success { background: #2a4a2a; border-color: #4a8a4a; color: #88ff88; }
-    .btn.warning { background: #4a3a1a; border-color: #8a6a2a; color: #ffcc88; }
-    .reset-btn { width: 100%; margin-top: 15px; padding: 12px; }
+
+    .btn.danger {
+      border-color: #aa4a4a;
+      color: #ffaaaa;
+    }
+
+    .btn.danger:hover {
+      background: #5a2a2a;
+    }
+
+    .btn.small {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    .btn.primary {
+      background: #3a3a8a;
+      border-color: #8a8aff;
+    }
+
+    .btn.success {
+      background: #2a4a2a;
+      border-color: #4a8a4a;
+      color: #88ff88;
+    }
+
+    .btn.warning {
+      background: #4a3a1a;
+      border-color: #8a6a2a;
+      color: #ffcc88;
+    }
+
+    .reset-btn {
+      width: 100%;
+      margin-top: 15px;
+      padding: 12px;
+    }
 
     .config-area {
       background: #15152b;
@@ -290,12 +403,14 @@
       margin-bottom: 15px;
       border: 1px solid var(--border);
     }
+
     .config-area label {
       display: block;
       margin-bottom: 5px;
       color: #afafff;
       font-size: 0.85rem;
     }
+
     .config-area input[type="text"],
     .config-area input[type="password"] {
       width: 100%;
@@ -307,6 +422,7 @@
       font-family: inherit;
       margin-bottom: 10px;
     }
+
     .help {
       font-size: 0.75rem;
       color: #888;
@@ -325,32 +441,38 @@
       margin-bottom: 8px;
       flex-wrap: wrap;
     }
+
     .reminder-item.disabled {
       opacity: 0.5;
       border-style: dashed;
     }
+
     .reminder-time {
       font-size: 1.2rem;
       font-weight: bold;
       color: #ffcc88;
       min-width: 70px;
     }
+
     .reminder-msg {
       flex: 1;
       color: #ccc;
       min-width: 150px;
     }
+
     .toggle-switch {
       position: relative;
       display: inline-block;
       width: 48px;
       height: 26px;
     }
+
     .toggle-switch input {
       opacity: 0;
       width: 0;
       height: 0;
     }
+
     .toggle-slider {
       position: absolute;
       cursor: pointer;
@@ -362,6 +484,7 @@
       transition: 0.3s;
       border-radius: 26px;
     }
+
     .toggle-slider:before {
       position: absolute;
       content: "";
@@ -373,10 +496,12 @@
       transition: 0.3s;
       border-radius: 50%;
     }
-    input:checked + .toggle-slider {
+
+    input:checked+.toggle-slider {
       background-color: #4a8a4a;
     }
-    input:checked + .toggle-slider:before {
+
+    input:checked+.toggle-slider:before {
       transform: translateX(22px);
     }
 
@@ -386,6 +511,7 @@
       gap: 8px;
       margin-bottom: 15px;
     }
+
     .day-btn {
       padding: 10px 5px;
       background: #1a1a30;
@@ -398,16 +524,19 @@
       transition: all 0.2s;
       font-family: inherit;
     }
+
     .day-btn.active {
       background: #3a3a8a;
       border-color: #8a8aff;
       color: #fff;
       box-shadow: 0 0 10px #6a6aff;
     }
+
     .day-btn.today {
       border-color: #ffaa00;
       color: #ffaa00;
     }
+
     .scheduled-item {
       display: flex;
       align-items: center;
@@ -423,13 +552,17 @@
       height: 250px;
       margin: 15px 0;
     }
-    canvas { max-height: 250px; }
+
+    canvas {
+      max-height: 250px;
+    }
 
     .achievement-list {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 10px;
     }
+
     .achievement {
       background: #1a1a30;
       padding: 12px;
@@ -437,14 +570,28 @@
       border: 1px solid #3a3a6a;
       text-align: center;
     }
+
     .achievement.unlocked {
       border-color: #ffaa00;
       background: #2a2a1a;
       box-shadow: 0 0 10px #ffaa0033;
     }
-    .achievement .icon { font-size: 2rem; }
-    .achievement .name { font-weight: bold; color: #ffcc88; margin: 5px 0; }
-    .achievement .desc { font-size: 0.8rem; color: #aaa; }
+
+    .achievement .icon {
+      font-size: 2rem;
+    }
+
+    .achievement .name {
+      font-weight: bold;
+      color: #ffcc88;
+      margin: 5px 0;
+    }
+
+    .achievement .desc {
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+
     .message {
       text-align: center;
       margin-top: 15px;
@@ -455,723 +602,770 @@
       border-radius: 8px;
       background: #15152b;
     }
-    hr { border-color: var(--border); margin: 15px 0; }
+
+    hr {
+      border-color: var(--border);
+      margin: 15px 0;
+    }
 
     .timezone-highlight {
       animation: pulse 2s infinite;
     }
+
     @keyframes pulse {
-      0%, 100% { box-shadow: 0 0 5px #6a6aff; }
-      50% { box-shadow: 0 0 20px #6a6aff, 0 0 40px #6a6aff44; }
+
+      0%,
+      100% {
+        box-shadow: 0 0 5px #6a6aff;
+      }
+
+      50% {
+        box-shadow: 0 0 20px #6a6aff, 0 0 40px #6a6aff44;
+      }
     }
 
     @media (max-width: 600px) {
-      .day-schedule { grid-template-columns: repeat(4, 1fr); }
-      .player-row { flex-direction: column; align-items: flex-start; }
-      .top-bar { gap: 4px; }
-      .tab-btn { padding: 6px 10px; font-size: 0.8rem; }
+      .day-schedule {
+        grid-template-columns: repeat(4, 1fr);
+      }
+
+      .player-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .top-bar {
+        gap: 4px;
+      }
+
+      .tab-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+      }
     }
   </style>
 </head>
+
 <body>
-<div class="app">
-  <div class="title">⚔️ SYSTEM WINDOW ⚔️</div>
-  <div class="subtitle">Daily Quest Pro Max: Rise of the Solo Player ☁️🔔</div>
+  <div class="app">
+    <div class="title">⚔️ SYSTEM WINDOW ⚔️</div>
+    <div class="subtitle">Daily Quest Pro Max: Rise of the Solo Player ☁️🔔</div>
 
-  <!-- Config Area -->
-  <div class="config-area" id="configArea">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div>
-        <label>🔑 GitHub Token (classic, scope: gist)</label>
-        <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+    <!-- Config Area -->
+    <div class="config-area" id="configArea">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label>🔑 GitHub Token (classic, scope: gist)</label>
+          <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx">
+        </div>
+        <div>
+          <label>📝 Gist ID (kosongkan untuk buat baru)</label>
+          <input type="text" id="gistId" placeholder="(otomatis)">
+        </div>
       </div>
-      <div>
-        <label>📝 Gist ID (kosongkan untuk buat baru)</label>
-        <input type="text" id="gistId" placeholder="(otomatis)">
+      <button class="btn primary" id="saveConfigBtn">💾 Simpan & Sinkronkan</button>
+      <span id="syncStatus" class="sync-status offline" style="margin-left:10px;">⚫ Belum terhubung</span>
+    </div>
+
+    <!-- Player Info -->
+    <div class="player-row">
+      <label>🎮 Player:</label>
+      <input type="text" id="playerName" placeholder="Namamu..." maxlength="20">
+
+      <label>🌍 Zona Waktu:</label>
+      <select id="timezoneSelect" style="padding:8px 12px;">
+        <option value="Asia/Makassar">WITA (UTC+8)</option>
+        <option value="Asia/Jakarta">WIB (UTC+7)</option>
+        <option value="Asia/Jayapura">WIT (UTC+9)</option>
+        <option value="Asia/Singapore">SGT (UTC+8)</option>
+        <option value="Asia/Tokyo">JST (UTC+9)</option>
+        <option value="America/New_York">EST (UTC-5)</option>
+        <option value="America/Los_Angeles">PST (UTC-8)</option>
+        <option value="Europe/London">GMT (UTC+0)</option>
+        <option value="auto">Otomatis (Browser)</option>
+      </select>
+
+      <span class="badge level-box" id="levelDisplay">Lv. 1</span>
+      <span class="badge streak-box" id="streakDisplay">🔥 Streak: 0</span>
+      <span class="badge exp-box" id="totalExpDisplay">⭐ EXP: 0</span>
+      <span class="badge time-box" id="currentTimeDisplay">🕐 --:--</span>
+      <span class="notif-status-box disabled" id="notifStatus">🔕 Notif: Off</span>
+    </div>
+
+    <!-- Tabs -->
+    <div class="top-bar">
+      <button class="tab-btn active" data-tab="daily">📋 Quest Hari Ini</button>
+      <button class="tab-btn" data-tab="schedule">📅 Jadwal</button>
+      <button class="tab-btn" data-tab="reminders">🔔 Reminder</button>
+      <button class="tab-btn" data-tab="stats">📊 Stats & Grafik</button>
+      <button class="tab-btn" data-tab="achievements">🏆 Achievement</button>
+    </div>
+
+    <!-- Daily Quest Tab -->
+    <div id="tabDaily" class="panel">
+      <h2>📋 QUEST HARI INI - <span id="currentDayLabel"></span></h2>
+      <ul class="quest-list" id="questContainer"></ul>
+      <button class="btn reset-btn" id="resetDailyBtn">🌅 RESET QUEST (Hari Baru)</button>
+    </div>
+
+    <!-- Schedule Tab -->
+    <div id="tabSchedule" class="panel hidden">
+      <h2>📅 JADWAL QUEST MINGGUAN</h2>
+      <p style="font-size:0.85rem;color:#aaa;margin-bottom:15px;">Atur quest spesial untuk setiap hari. Quest harian
+        tetap muncul + quest jadwal.</p>
+      <div class="day-schedule" id="dayButtons"></div>
+      <div id="scheduleEditor" style="margin-top:15px;">
+        <h3 style="color:#c8b8ff;">Quest untuk <span id="selectedDayLabel">Senin</span>:</h3>
+        <div id="scheduledQuestList"></div>
+        <div style="display:flex;gap:10px;margin-top:10px;">
+          <input type="text" id="newScheduledQuest" placeholder="Quest baru..."
+            style="flex:1;background:#0b0b1a;border:1px solid #5a5aaa;color:#e0e0ff;padding:8px;border-radius:6px;font-family:inherit;">
+          <select id="newScheduledStat"
+            style="background:#0b0b1a;border:1px solid #5a5aaa;color:#e0e0ff;padding:8px;border-radius:6px;font-family:inherit;">
+            <option value="STR">STR</option>
+            <option value="VIT">VIT</option>
+            <option value="AGI">AGI</option>
+            <option value="INT">INT</option>
+            <option value="WIS">WIS</option>
+            <option value="SENSE">SENSE</option>
+            <option value="CHARM">CHARM</option>
+          </select>
+          <button class="btn primary small" id="addScheduledBtn">＋ Tambah</button>
+        </div>
       </div>
     </div>
-    <button class="btn primary" id="saveConfigBtn">💾 Simpan & Sinkronkan</button>
-    <span id="syncStatus" class="sync-status offline" style="margin-left:10px;">⚫ Belum terhubung</span>
-  </div>
 
-  <!-- Player Info -->
-  <div class="player-row">
-    <label>🎮 Player:</label>
-    <input type="text" id="playerName" placeholder="Namamu..." maxlength="20">
-    
-    <label>🌍 Zona Waktu:</label>
-    <select id="timezoneSelect" style="padding:8px 12px;">
-      <option value="Asia/Makassar">WITA (UTC+8)</option>
-      <option value="Asia/Jakarta">WIB (UTC+7)</option>
-      <option value="Asia/Jayapura">WIT (UTC+9)</option>
-      <option value="Asia/Singapore">SGT (UTC+8)</option>
-      <option value="Asia/Tokyo">JST (UTC+9)</option>
-      <option value="America/New_York">EST (UTC-5)</option>
-      <option value="America/Los_Angeles">PST (UTC-8)</option>
-      <option value="Europe/London">GMT (UTC+0)</option>
-      <option value="auto">Otomatis (Browser)</option>
-    </select>
-
-    <span class="badge level-box" id="levelDisplay">Lv. 1</span>
-    <span class="badge streak-box" id="streakDisplay">🔥 Streak: 0</span>
-    <span class="badge exp-box" id="totalExpDisplay">⭐ EXP: 0</span>
-    <span class="badge time-box" id="currentTimeDisplay">🕐 --:--</span>
-    <span class="notif-status-box disabled" id="notifStatus">🔕 Notif: Off</span>
-  </div>
-
-  <!-- Tabs -->
-  <div class="top-bar">
-    <button class="tab-btn active" data-tab="daily">📋 Quest Hari Ini</button>
-    <button class="tab-btn" data-tab="schedule">📅 Jadwal</button>
-    <button class="tab-btn" data-tab="reminders">🔔 Reminder</button>
-    <button class="tab-btn" data-tab="stats">📊 Stats & Grafik</button>
-    <button class="tab-btn" data-tab="achievements">🏆 Achievement</button>
-  </div>
-
-  <!-- Daily Quest Tab -->
-  <div id="tabDaily" class="panel">
-    <h2>📋 QUEST HARI INI - <span id="currentDayLabel"></span></h2>
-    <ul class="quest-list" id="questContainer"></ul>
-    <button class="btn reset-btn" id="resetDailyBtn">🌅 RESET QUEST (Hari Baru)</button>
-  </div>
-
-  <!-- Schedule Tab -->
-  <div id="tabSchedule" class="panel hidden">
-    <h2>📅 JADWAL QUEST MINGGUAN</h2>
-    <p style="font-size:0.85rem;color:#aaa;margin-bottom:15px;">Atur quest spesial untuk setiap hari. Quest harian tetap muncul + quest jadwal.</p>
-    <div class="day-schedule" id="dayButtons"></div>
-    <div id="scheduleEditor" style="margin-top:15px;">
-      <h3 style="color:#c8b8ff;">Quest untuk <span id="selectedDayLabel">Senin</span>:</h3>
-      <div id="scheduledQuestList"></div>
-      <div style="display:flex;gap:10px;margin-top:10px;">
-        <input type="text" id="newScheduledQuest" placeholder="Quest baru..." style="flex:1;background:#0b0b1a;border:1px solid #5a5aaa;color:#e0e0ff;padding:8px;border-radius:6px;font-family:inherit;">
-        <select id="newScheduledStat" style="background:#0b0b1a;border:1px solid #5a5aaa;color:#e0e0ff;padding:8px;border-radius:6px;font-family:inherit;">
-          <option value="STR">STR</option><option value="VIT">VIT</option><option value="AGI">AGI</option>
-          <option value="INT">INT</option><option value="WIS">WIS</option><option value="SENSE">SENSE</option><option value="CHARM">CHARM</option>
-        </select>
-        <button class="btn primary small" id="addScheduledBtn">＋ Tambah</button>
+    <!-- Reminders Tab -->
+    <div id="tabReminders" class="panel hidden">
+      <h2>🔔 PENGATURAN REMINDER</h2>
+      <p style="font-size:0.85rem;color:#aaa;margin-bottom:15px;">
+        ⚠️ Pastikan browser mengizinkan notifikasi.
+        <button class="btn warning small" id="requestNotifPermBtn">🔔 Aktifkan Notifikasi</button>
+      </p>
+      <div id="reminderList"></div>
+      <div style="display:flex;gap:10px;margin-top:15px;align-items:center;flex-wrap:wrap;">
+        <input type="time" id="newReminderTime" value="08:00"
+          style="background:#0b0b1a;border:1px solid #5a5aaa;color:#e0e0ff;padding:8px;border-radius:6px;font-family:inherit;">
+        <input type="text" id="newReminderMsg" placeholder="Pesan reminder..." value="Waktunya selesaikan quest! 🔥"
+          style="flex:1;background:#0b0b1a;border:1px solid #5a5aaa;color:#e0e0ff;padding:8px;border-radius:6px;font-family:inherit;min-width:150px;">
+        <button class="btn success small" id="addReminderBtn">＋ Tambah Reminder</button>
       </div>
+      <hr>
+      <button class="btn warning" id="testNotifBtn">🧪 Test Notifikasi Sekarang</button>
     </div>
-  </div>
 
-  <!-- Reminders Tab -->
-  <div id="tabReminders" class="panel hidden">
-    <h2>🔔 PENGATURAN REMINDER</h2>
-    <p style="font-size:0.85rem;color:#aaa;margin-bottom:15px;">
-      ⚠️ Pastikan browser mengizinkan notifikasi. 
-      <button class="btn warning small" id="requestNotifPermBtn">🔔 Aktifkan Notifikasi</button>
-    </p>
-    <div id="reminderList"></div>
-    <div style="display:flex;gap:10px;margin-top:15px;align-items:center;flex-wrap:wrap;">
-      <input type="time" id="newReminderTime" value="08:00" style="background:#0b0b1a;border:1px solid #5a5aaa;color:#e0e0ff;padding:8px;border-radius:6px;font-family:inherit;">
-      <input type="text" id="newReminderMsg" placeholder="Pesan reminder..." value="Waktunya selesaikan quest! 🔥" style="flex:1;background:#0b0b1a;border:1px solid #5a5aaa;color:#e0e0ff;padding:8px;border-radius:6px;font-family:inherit;min-width:150px;">
-      <button class="btn success small" id="addReminderBtn">＋ Tambah Reminder</button>
+    <!-- Stats & Graph Tab -->
+    <div id="tabStats" class="panel hidden">
+      <h2>📊 STATUS PLAYER</h2>
+      <div id="statsContainer"></div>
+      <div class="exp-area">
+        <span class="exp-label">EXP</span>
+        <div class="exp-bar-bg">
+          <div class="exp-bar-fill" id="expBarFill" style="width:0%"></div>
+        </div>
+        <span id="expText">0 / 100</span>
+      </div>
+      <hr>
+      <h2>📈 GRAFIK EXP HARIAN (7 Hari)</h2>
+      <div class="chart-container"><canvas id="expChart"></canvas></div>
+      <hr>
+      <h2>🔥 RIWAYAT STREAK</h2>
+      <div id="streakHistory" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
     </div>
-    <hr>
-    <button class="btn warning" id="testNotifBtn">🧪 Test Notifikasi Sekarang</button>
-  </div>
 
-  <!-- Stats & Graph Tab -->
-  <div id="tabStats" class="panel hidden">
-    <h2>📊 STATUS PLAYER</h2>
-    <div id="statsContainer"></div>
-    <div class="exp-area">
-      <span class="exp-label">EXP</span>
-      <div class="exp-bar-bg"><div class="exp-bar-fill" id="expBarFill" style="width:0%"></div></div>
-      <span id="expText">0 / 100</span>
+    <!-- Achievements Tab -->
+    <div id="tabAchievements" class="panel hidden">
+      <h2>🏆 ACHIEVEMENTS</h2>
+      <div class="achievement-list" id="achievementList"></div>
     </div>
+
+    <div class="message" id="messageBox"></div>
     <hr>
-    <h2>📈 GRAFIK EXP HARIAN (7 Hari)</h2>
-    <div class="chart-container"><canvas id="expChart"></canvas></div>
-    <hr>
-    <h2>🔥 RIWAYAT STREAK</h2>
-    <div id="streakHistory" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    <small style="color:#777;">☁️ Cloud Save via GitHub Gist • 🌍 Timezone: <span id="footerTimezone">WITA</span> • 🔔
+      Notifikasi otomatis</small>
   </div>
 
-  <!-- Achievements Tab -->
-  <div id="tabAchievements" class="panel hidden">
-    <h2>🏆 ACHIEVEMENTS</h2>
-    <div class="achievement-list" id="achievementList"></div>
-  </div>
+  <script src="time-display.js"></script>
+  <script>
+    (function () {
+      // ============ CONSTANTS ============
+      const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
-  <div class="message" id="messageBox"></div>
-  <hr>
-  <small style="color:#777;">☁️ Cloud Save via GitHub Gist • 🌍 Timezone: <span id="footerTimezone">WITA</span> • 🔔 Notifikasi otomatis</small>
-</div>
-
-<script src="time-display.js"></script>
-<script>
-(function() {
-  // ============ CONSTANTS ============
-  const DAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
-  
-  const TIMEZONES = {
-    'Asia/Makassar': { label: 'WITA', offset: 8 },
-    'Asia/Jakarta': { label: 'WIB', offset: 7 },
-    'Asia/Jayapura': { label: 'WIT', offset: 9 },
-    'Asia/Singapore': { label: 'SGT', offset: 8 },
-    'Asia/Tokyo': { label: 'JST', offset: 9 },
-    'America/New_York': { label: 'EST', offset: -5 },
-    'America/Los_Angeles': { label: 'PST', offset: -8 },
-    'Europe/London': { label: 'GMT', offset: 0 },
-    'auto': { label: 'Auto', offset: null }
-  };
-
-  const DEFAULT_QUESTS = [
-    { id: 'str1', text: 'Bangun tanpa snooze / langsung duduk tegak 1 menit', stat: 'STR', days: [0,1,2,3,4,5,6] },
-    { id: 'vit1', text: 'Minum 2 gelas air putih setelah bangun', stat: 'VIT', days: [0,1,2,3,4,5,6] },
-    { id: 'agi1', text: 'Gerak/stretching ringan 10 menit', stat: 'AGI', days: [0,1,2,3,4,5,6] },
-    { id: 'int1', text: 'Kerjakan 1 hal produktif tanpa distraksi 25 menit', stat: 'INT', days: [1,2,3,4,5] },
-    { id: 'wis1', text: 'Baca/belajar hal baru 15 menit', stat: 'WIS', days: [0,1,2,3,4,5,6] },
-    { id: 'sen1', text: 'Tulis self check-in: "Hari ini aku bersyukur/bangga karena…"', stat: 'SENSE', days: [0,1,2,3,4,5,6] },
-    { id: 'cha1', text: 'Lakukan 1 hal menyenangkan tanpa rasa bersalah (BONUS)', stat: 'CHARM', days: [0,6] }
-  ];
-
-  const ACHIEVEMENTS = [
-    { id: 'first_quest', name: 'Langkah Pertama', desc: 'Selesaikan quest pertama', icon: '👣', check: (s) => s.totalExp >= 10 },
-    { id: 'level5', name: 'Naik Level', desc: 'Capai Level 5', icon: '⬆️', check: (s) => getLevel(s.totalExp) >= 5 },
-    { id: 'level10', name: 'Petarung Sejati', desc: 'Capai Level 10', icon: '⚔️', check: (s) => getLevel(s.totalExp) >= 10 },
-    { id: 'streak3', name: 'Konsisten', desc: 'Streak 3 hari berturut-turut', icon: '🔥', check: (s) => (s.streak || 0) >= 3 },
-    { id: 'streak7', name: 'Tak Terhentikan', desc: 'Streak 7 hari berturut-turut', icon: '💪', check: (s) => (s.streak || 0) >= 7 },
-    { id: 'all_quests', name: 'Hari Sempurna', desc: 'Selesaikan semua quest dalam sehari', icon: '🌟', check: (s) => s.allQuestsDone || false },
-    { id: 'exp1000', name: 'Expert Player', desc: 'Kumpulkan 1000 EXP', icon: '🎯', check: (s) => s.totalExp >= 1000 },
-    { id: 'custom_quest', name: 'Kreator Quest', desc: 'Buat quest kustom pertama', icon: '✏️', check: (s) => s.hasCustomQuest || false }
-  ];
-
-  // ============ STATE ============
-  let state = {
-    playerName: '',
-    stats: {},
-    totalExp: 0,
-    dailyDate: '',
-    completedQuests: [],
-    quests: JSON.parse(JSON.stringify(DEFAULT_QUESTS)),
-    scheduledQuests: {},
-    expHistory: {},
-    streak: 0,
-    lastActiveDate: '',
-    unlockedAchievements: [],
-    allQuestsDone: false,
-    hasCustomQuest: false,
-    timezone: 'Asia/Makassar',
-    reminders: [
-      { id: '1', time: '08:00', message: 'Waktunya selesaikan quest pagi! 🔥', enabled: true, days: [0,1,2,3,4,5,6] },
-      { id: '2', time: '20:00', message: 'Jangan lupa check-in dan evaluasi hari ini! 📝', enabled: true, days: [0,1,2,3,4,5,6] }
-    ]
-  };
-
-  let githubToken = '';
-  let gistId = '';
-  let isSyncing = false;
-  let syncTimer = null;
-  let expChart = null;
-  let reminderTimers = [];
-  let currentScheduleDay = new Date().getDay();
-  let notificationPermission = 'default';
-  let clockInterval = null;
-
-  // ============ TIMEZONE UTILITIES ============
-  function getNowInTimezone() {
-    const tz = state.timezone || 'auto';
-    if (tz === 'auto') return new Date();
-    
-    try {
-      const now = new Date();
-      const tzInfo = TIMEZONES[tz];
-      if (!tzInfo || tzInfo.offset === null) return now;
-      
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: tz,
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      });
-      
-      const parts = formatter.formatToParts(now);
-      const dateParts = {};
-      parts.forEach(p => {
-        if (p.type !== 'literal') dateParts[p.type] = parseInt(p.value);
-      });
-      
-      return new Date(dateParts.year, dateParts.month - 1, dateParts.day, dateParts.hour, dateParts.minute, dateParts.second);
-    } catch(e) {
-      return new Date();
-    }
-  }
-
-  function getTodayInTimezone() {
-    const now = getNowInTimezone();
-    return now.getFullYear() + '-' + 
-           String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-           String(now.getDate()).padStart(2, '0');
-  }
-
-  function getDayIndexInTimezone() {
-    return getNowInTimezone().getDay();
-  }
-
-  function getCurrentTimeString() {
-    const now = getNowInTimezone();
-    return String(now.getHours()).padStart(2, '0') + ':' + 
-           String(now.getMinutes()).padStart(2, '0');
-  }
-
-  function getTimezoneLabel() {
-    const tz = state.timezone || 'auto';
-    if (tz === 'auto') return 'Auto';
-    return TIMEZONES[tz]?.label || tz;
-  }
-
-  // ============ UTILITY ============
-  function getLevel(exp) { return Math.floor(exp / 100) + 1; }
-  function expForNextLevel(exp) { return getLevel(exp) * 100; }
-  function getToday() { return getTodayInTimezone(); }
-  function getDayIndex() { return getDayIndexInTimezone(); }
-  
-  function showMessage(msg, duration = 4000) {
-    const box = document.getElementById('messageBox');
-    box.textContent = msg;
-    clearTimeout(window.msgTimeout);
-    window.msgTimeout = setTimeout(() => { if (box.textContent === msg) box.textContent = ''; }, duration);
-  }
-  
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
-  // ============ NOTIFICATION SYSTEM (FIXED) ============
-  async function checkNotificationPermission() {
-    if (!('Notification' in window)) {
-      notificationPermission = 'denied';
-      return 'denied';
-    }
-    notificationPermission = Notification.permission;
-    updateNotifStatus();
-    return notificationPermission;
-  }
-
-  async function requestNotificationPermission() {
-    if (!('Notification' in window)) {
-      showMessage('❌ Browser tidak mendukung notifikasi.');
-      return 'denied';
-    }
-    try {
-      // PAKSA minta izin meskipun sebelumnya ditolak
-      const perm = await Notification.requestPermission();
-      notificationPermission = perm;
-      updateNotifStatus();
-      if (perm === 'granted') {
-        showMessage('✅ Notifikasi diaktifkan!');
-        scheduleAllReminders();
-      } else if (perm === 'denied') {
-        showMessage('❌ Notifikasi ditolak. Buka Settings > Apps > Chrome > Notifications untuk izinkan manual.');
-      } else {
-        showMessage('⏳ Izin notifikasi ditunda. Coba lagi.');
-      }
-      return perm;
-    } catch(e) {
-      showMessage('❌ Gagal request izin notifikasi: ' + e.message);
-      return 'denied';
-    }
-  }
-
-  function updateNotifStatus() {
-    const statusEl = document.getElementById('notifStatus');
-    if (notificationPermission === 'granted') {
-      statusEl.textContent = '🔔 Notif: On';
-      statusEl.className = 'notif-status-box';
-    } else {
-      statusEl.textContent = '🔕 Notif: Off';
-      statusEl.className = 'notif-status-box disabled';
-    }
-  }
-
-  function sendNotification(title, body, icon = '⚔️') {
-    if (notificationPermission !== 'granted') {
-      console.log('Notifikasi gagal: izin belum granted');
-      return;
-    }
-    try {
-      const notif = new Notification(title, {
-        body: body,
-        icon: `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">${icon}</text></svg>`,
-        tag: 'solo-leveling',
-        requireInteraction: true,
-        vibrate: [200, 100, 200]
-      });
-      notif.onclick = () => {
-        window.focus();
-        notif.close();
+      const TIMEZONES = {
+        'Asia/Makassar': { label: 'WITA', offset: 8 },
+        'Asia/Jakarta': { label: 'WIB', offset: 7 },
+        'Asia/Jayapura': { label: 'WIT', offset: 9 },
+        'Asia/Singapore': { label: 'SGT', offset: 8 },
+        'Asia/Tokyo': { label: 'JST', offset: 9 },
+        'America/New_York': { label: 'EST', offset: -5 },
+        'America/Los_Angeles': { label: 'PST', offset: -8 },
+        'Europe/London': { label: 'GMT', offset: 0 },
+        'auto': { label: 'Auto', offset: null }
       };
-      setTimeout(() => notif.close(), 10000);
-      console.log('✅ Notifikasi terkirim:', title);
-    } catch(e) {
-      console.log('Notifikasi gagal:', e);
-    }
-  }
 
-  function clearAllReminderTimers() {
-    reminderTimers.forEach(t => clearTimeout(t));
-    reminderTimers = [];
-  }
+      const DEFAULT_QUESTS = [
+        { id: 'str1', text: 'Bangun tanpa snooze / langsung duduk tegak 1 menit', stat: 'STR', days: [0, 1, 2, 3, 4, 5, 6] },
+        { id: 'vit1', text: 'Minum 2 gelas air putih setelah bangun', stat: 'VIT', days: [0, 1, 2, 3, 4, 5, 6] },
+        { id: 'agi1', text: 'Gerak/stretching ringan 10 menit', stat: 'AGI', days: [0, 1, 2, 3, 4, 5, 6] },
+        { id: 'int1', text: 'Kerjakan 1 hal produktif tanpa distraksi 25 menit', stat: 'INT', days: [1, 2, 3, 4, 5] },
+        { id: 'wis1', text: 'Baca/belajar hal baru 15 menit', stat: 'WIS', days: [0, 1, 2, 3, 4, 5, 6] },
+        { id: 'sen1', text: 'Tulis self check-in: "Hari ini aku bersyukur/bangga karena…"', stat: 'SENSE', days: [0, 1, 2, 3, 4, 5, 6] },
+        { id: 'cha1', text: 'Lakukan 1 hal menyenangkan tanpa rasa bersalah (BONUS)', stat: 'CHARM', days: [0, 6] }
+      ];
 
-  function scheduleAllReminders() {
-    clearAllReminderTimers();
-    if (notificationPermission !== 'granted') {
-      console.log('Reminder tidak dijadwalkan: izin notifikasi belum granted');
-      return;
-    }
+      const ACHIEVEMENTS = [
+        { id: 'first_quest', name: 'Langkah Pertama', desc: 'Selesaikan quest pertama', icon: '👣', check: (s) => s.totalExp >= 10 },
+        { id: 'level5', name: 'Naik Level', desc: 'Capai Level 5', icon: '⬆️', check: (s) => getLevel(s.totalExp) >= 5 },
+        { id: 'level10', name: 'Petarung Sejati', desc: 'Capai Level 10', icon: '⚔️', check: (s) => getLevel(s.totalExp) >= 10 },
+        { id: 'streak3', name: 'Konsisten', desc: 'Streak 3 hari berturut-turut', icon: '🔥', check: (s) => (s.streak || 0) >= 3 },
+        { id: 'streak7', name: 'Tak Terhentikan', desc: 'Streak 7 hari berturut-turut', icon: '💪', check: (s) => (s.streak || 0) >= 7 },
+        { id: 'all_quests', name: 'Hari Sempurna', desc: 'Selesaikan semua quest dalam sehari', icon: '🌟', check: (s) => s.allQuestsDone || false },
+        { id: 'exp1000', name: 'Expert Player', desc: 'Kumpulkan 1000 EXP', icon: '🎯', check: (s) => s.totalExp >= 1000 },
+        { id: 'custom_quest', name: 'Kreator Quest', desc: 'Buat quest kustom pertama', icon: '✏️', check: (s) => s.hasCustomQuest || false }
+      ];
 
-    const now = getNowInTimezone();
-    const today = now.getDay();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      // ============ STATE ============
+      let state = {
+        playerName: '',
+        stats: {},
+        totalExp: 0,
+        dailyDate: '',
+        completedQuests: [],
+        quests: JSON.parse(JSON.stringify(DEFAULT_QUESTS)),
+        scheduledQuests: {},
+        expHistory: {},
+        streak: 0,
+        lastActiveDate: '',
+        unlockedAchievements: [],
+        allQuestsDone: false,
+        hasCustomQuest: false,
+        timezone: 'Asia/Makassar',
+        reminders: [
+          { id: '1', time: '08:00', message: 'Waktunya selesaikan quest pagi! 🔥', enabled: true, days: [0, 1, 2, 3, 4, 5, 6] },
+          { id: '2', time: '20:00', message: 'Jangan lupa check-in dan evaluasi hari ini! 📝', enabled: true, days: [0, 1, 2, 3, 4, 5, 6] }
+        ]
+      };
 
-    console.log(`Schedule reminder untuk hari ${DAYS[today]}, jam ${getCurrentTimeString()}`);
+      let githubToken = '';
+      let gistId = '';
+      let isSyncing = false;
+      let syncTimer = null;
+      let expChart = null;
+      let reminderTimers = [];
+      let currentScheduleDay = new Date().getDay();
+      let notificationPermission = 'default';
+      let clockInterval = null;
 
-    state.reminders.forEach(reminder => {
-      if (!reminder.enabled) return;
-      if (!reminder.days.includes(today)) return;
+      // ============ TIMEZONE UTILITIES ============
+      function getNowInTimezone() {
+        const tz = state.timezone || 'auto';
+        if (tz === 'auto') return new Date();
 
-      const [h, m] = reminder.time.split(':').map(Number);
-      const reminderMinutes = h * 60 + m;
+        try {
+          const now = new Date();
+          const tzInfo = TIMEZONES[tz];
+          if (!tzInfo || tzInfo.offset === null) return now;
 
-      if (reminderMinutes <= currentMinutes) {
-        console.log(`Reminder ${reminder.time} sudah lewat, skip`);
-        return;
+          const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: tz,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
+
+          const parts = formatter.formatToParts(now);
+          const dateParts = {};
+          parts.forEach(p => {
+            if (p.type !== 'literal') dateParts[p.type] = parseInt(p.value);
+          });
+
+          return new Date(dateParts.year, dateParts.month - 1, dateParts.day, dateParts.hour, dateParts.minute, dateParts.second);
+        } catch (e) {
+          return new Date();
+        }
       }
 
-      const delayMs = (reminderMinutes - currentMinutes) * 60 * 1000;
-      console.log(`Reminder ${reminder.time} dijadwalkan dalam ${delayMs/60000} menit`);
-      
-      const timer = setTimeout(() => {
-        sendNotification(
-          '⚔️ Solo Leveling Reminder',
-          reminder.message,
-          '⏰'
-        );
-      }, delayMs);
-      reminderTimers.push(timer);
-    });
-  }
-
-  // ============ GITHUB GIST SYNC ============
-  async function createGist() {
-    const res = await fetch('https://api.github.com/gists', {
-      method: 'POST',
-      headers: { 'Authorization': `token ${githubToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ description: 'Solo Leveling Pro Max Data', public: false, files: { 'solo-data.json': { content: JSON.stringify(state) } } })
-    });
-    if (!res.ok) throw new Error('Gagal buat Gist');
-    const data = await res.json();
-    return data.id;
-  }
-  
-  async function updateGist() {
-    if (!githubToken || !gistId) return;
-    await fetch(`https://api.github.com/gists/${gistId}`, {
-      method: 'PATCH',
-      headers: { 'Authorization': `token ${githubToken}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ files: { 'solo-data.json': { content: JSON.stringify(state) } } })
-    });
-  }
-  
-  async function fetchGist() {
-    if (!githubToken || !gistId) return null;
-    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-      headers: { 'Authorization': `token ${githubToken}` }
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const file = data.files['solo-data.json'];
-    return file ? JSON.parse(file.content) : null;
-  }
-  
-  async function syncToCloud() {
-    if (isSyncing || !githubToken) return;
-    isSyncing = true;
-    try {
-      document.getElementById('syncStatus').textContent = '🔄 Sync...';
-      document.getElementById('syncStatus').className = 'sync-status';
-      if (!gistId) {
-        gistId = await createGist();
-        localStorage.setItem('solo_gist_id', gistId);
-        document.getElementById('gistId').value = gistId;
-      } else {
-        await updateGist();
+      function getTodayInTimezone() {
+        const now = getNowInTimezone();
+        return now.getFullYear() + '-' +
+          String(now.getMonth() + 1).padStart(2, '0') + '-' +
+          String(now.getDate()).padStart(2, '0');
       }
-      document.getElementById('syncStatus').textContent = '☁️ Tersimpan';
-      document.getElementById('syncStatus').className = 'sync-status';
-    } catch(e) {
-      document.getElementById('syncStatus').textContent = '❌ Gagal sync';
-      document.getElementById('syncStatus').className = 'sync-status offline';
-    } finally { isSyncing = false; }
-  }
-  
-  function debouncedSync() {
-    clearTimeout(syncTimer);
-    syncTimer = setTimeout(syncToCloud, 2000);
-  }
-  
-  async function loadFromCloud() {
-    if (!githubToken || !gistId) return;
-    try {
-      const data = await fetchGist();
-      if (data) {
-        state = { ...state, ...data };
-        document.getElementById('playerName').value = state.playerName || '';
-        document.getElementById('timezoneSelect').value = state.timezone || 'Asia/Makassar';
-        updateTimezoneDisplay();
-        renderAll();
-        showMessage('📥 Data berhasil dimuat dari cloud!');
+
+      function getDayIndexInTimezone() {
+        return getNowInTimezone().getDay();
       }
-    } catch(e) {}
-  }
 
-  // ============ STREAK & HISTORY ============
-  function updateStreak() {
-    const today = getToday();
-    const yesterday = new Date(getNowInTimezone().getTime() - 86400000);
-    const yesterdayStr = yesterday.getFullYear() + '-' + 
-                         String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + 
-                         String(yesterday.getDate()).padStart(2, '0');
-    
-    if (state.lastActiveDate === yesterdayStr) {
-      state.streak = (state.streak || 0) + 1;
-    } else if (state.lastActiveDate !== today) {
-      state.streak = 1;
-    }
-    state.lastActiveDate = today;
-  }
+      function getCurrentTimeString() {
+        const now = getNowInTimezone();
+        return String(now.getHours()).padStart(2, '0') + ':' +
+          String(now.getMinutes()).padStart(2, '0');
+      }
 
-  function getActiveQuestsForToday() {
-    const dayIndex = getDayIndex();
-    let activeQuests = state.quests.filter(q => q.days && q.days.includes(dayIndex));
-    const scheduled = state.scheduledQuests[dayIndex.toString()] || [];
-    scheduled.forEach(sq => {
-      activeQuests.push({
-        id: 'sched_' + dayIndex + '_' + sq.text.replace(/\s/g, '_'),
-        text: sq.text,
-        stat: sq.stat,
-        isScheduled: true
-      });
-    });
-    return activeQuests;
-  }
+      function getTimezoneLabel() {
+        const tz = state.timezone || 'auto';
+        if (tz === 'auto') return 'Auto';
+        return TIMEZONES[tz]?.label || tz;
+      }
 
-  // ============ RENDER FUNCTIONS ============
-  function renderDaily() {
-    const today = getToday();
-    if (state.dailyDate !== today) {
-      const yesterdayQuestsDone = state.completedQuests.filter(Boolean).length;
-      if (yesterdayQuestsDone > 0) updateStreak();
-      state.dailyDate = today;
-      state.completedQuests = [];
-      state.allQuestsDone = false;
-    }
+      // ============ UTILITY ============
+      function getLevel(exp) { return Math.floor(exp / 100) + 1; }
+      function expForNextLevel(exp) { return getLevel(exp) * 100; }
+      function getToday() { return getTodayInTimezone(); }
+      function getDayIndex() { return getDayIndexInTimezone(); }
 
-    const activeQuests = getActiveQuestsForToday();
-    while (state.completedQuests.length < activeQuests.length) state.completedQuests.push(false);
-    if (state.completedQuests.length > activeQuests.length) state.completedQuests = state.completedQuests.slice(0, activeQuests.length);
+      function showMessage(msg, duration = 4000) {
+        const box = document.getElementById('messageBox');
+        box.textContent = msg;
+        clearTimeout(window.msgTimeout);
+        window.msgTimeout = setTimeout(() => { if (box.textContent === msg) box.textContent = ''; }, duration);
+      }
 
-    document.getElementById('currentDayLabel').textContent = DAYS[getDayIndex()] + ' (' + getTimezoneLabel() + ')';
-    const container = document.getElementById('questContainer');
-    container.innerHTML = '';
+      function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
 
-    activeQuests.forEach((q, idx) => {
-      const completed = state.completedQuests[idx] || false;
-      const li = document.createElement('li');
-      li.className = `quest-item ${completed ? 'completed' : ''}`;
-      li.innerHTML = `
+      // ============ NOTIFICATION SYSTEM (FIXED) ============
+      async function checkNotificationPermission() {
+        if (!('Notification' in window)) {
+          notificationPermission = 'denied';
+          return 'denied';
+        }
+        notificationPermission = Notification.permission;
+        updateNotifStatus();
+        return notificationPermission;
+      }
+
+      async function requestNotificationPermission() {
+        if (!('Notification' in window)) {
+          showMessage('❌ Browser tidak mendukung notifikasi.');
+          return 'denied';
+        }
+        try {
+          // PAKSA minta izin meskipun sebelumnya ditolak
+          const perm = await Notification.requestPermission();
+          notificationPermission = perm;
+          updateNotifStatus();
+          if (perm === 'granted') {
+            showMessage('✅ Notifikasi diaktifkan!');
+            scheduleAllReminders();
+          } else if (perm === 'denied') {
+            showMessage('❌ Notifikasi ditolak. Buka Settings > Apps > Chrome > Notifications untuk izinkan manual.');
+          } else {
+            showMessage('⏳ Izin notifikasi ditunda. Coba lagi.');
+          }
+          return perm;
+        } catch (e) {
+          showMessage('❌ Gagal request izin notifikasi: ' + e.message);
+          return 'denied';
+        }
+      }
+
+      function updateNotifStatus() {
+        const statusEl = document.getElementById('notifStatus');
+        if (notificationPermission === 'granted') {
+          statusEl.textContent = '🔔 Notif: On';
+          statusEl.className = 'notif-status-box';
+        } else {
+          statusEl.textContent = '🔕 Notif: Off';
+          statusEl.className = 'notif-status-box disabled';
+        }
+      }
+
+      function sendNotification(title, body, icon = '⚔️') {
+        // Coba notifikasi browser dulu
+        if (notificationPermission === 'granted') {
+          try {
+            const notif = new Notification(title, { /* ... */ });
+            console.log('Notifikasi browser terkirim');
+            return;
+          } catch (e) { console.log('Browser notification failed, falling back to email'); }
+        }
+
+        // Fallback ke EmailJS
+        const templateParams = {
+          to_name: state.playerName || 'Player',
+          player_name: state.playerName || 'Player',
+          title: title,
+          message: body,
+          quest_list: getActiveQuestsForToday().map((q, i) => `${i + 1}. ${q.text}`).join('\n'),
+          daily_date: getToday(),
+          current_level: getLevel(state.totalExp),
+          current_streak: state.streak || 0
+        };
+
+        emailjs.send("service_0j4uhxh", "template_knzkzyg", templateParams)
+          .then(function (response) {
+            console.log('✅ Email notifikasi terkirim!', response.status, response.text);
+            showMessage('📧 Notifikasi email terkirim!');
+          }, function (err) {
+            console.log('❌ Gagal kirim email:', err);
+            showMessage('❌ Gagal mengirim notifikasi email.');
+          });
+      }
+
+      function clearAllReminderTimers() {
+        reminderTimers.forEach(t => clearTimeout(t));
+        reminderTimers = [];
+      }
+
+      function scheduleAllReminders() {
+        clearAllReminderTimers();
+        if (notificationPermission !== 'granted') {
+          console.log('Reminder tidak dijadwalkan: izin notifikasi belum granted');
+          return;
+        }
+
+        const now = getNowInTimezone();
+        const today = now.getDay();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+        console.log(`Schedule reminder untuk hari ${DAYS[today]}, jam ${getCurrentTimeString()}`);
+
+        state.reminders.forEach(reminder => {
+          if (!reminder.enabled) return;
+          if (!reminder.days.includes(today)) return;
+
+          const [h, m] = reminder.time.split(':').map(Number);
+          const reminderMinutes = h * 60 + m;
+
+          if (reminderMinutes <= currentMinutes) {
+            console.log(`Reminder ${reminder.time} sudah lewat, skip`);
+            return;
+          }
+
+          const delayMs = (reminderMinutes - currentMinutes) * 60 * 1000;
+          console.log(`Reminder ${reminder.time} dijadwalkan dalam ${delayMs / 60000} menit`);
+
+          const timer = setTimeout(() => {
+            sendNotification(
+              '⚔️ Solo Leveling Reminder',
+              reminder.message,
+              '⏰'
+            );
+          }, delayMs);
+          reminderTimers.push(timer);
+        });
+      }
+
+      // ============ GITHUB GIST SYNC ============
+      async function createGist() {
+        const res = await fetch('https://api.github.com/gists', {
+          method: 'POST',
+          headers: { 'Authorization': `token ${githubToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ description: 'Solo Leveling Pro Max Data', public: false, files: { 'solo-data.json': { content: JSON.stringify(state) } } })
+        });
+        if (!res.ok) throw new Error('Gagal buat Gist');
+        const data = await res.json();
+        return data.id;
+      }
+
+      async function updateGist() {
+        if (!githubToken || !gistId) return;
+        await fetch(`https://api.github.com/gists/${gistId}`, {
+          method: 'PATCH',
+          headers: { 'Authorization': `token ${githubToken}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ files: { 'solo-data.json': { content: JSON.stringify(state) } } })
+        });
+      }
+
+      async function fetchGist() {
+        if (!githubToken || !gistId) return null;
+        const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+          headers: { 'Authorization': `token ${githubToken}` }
+        });
+        if (!res.ok) return null;
+        const data = await res.json();
+        const file = data.files['solo-data.json'];
+        return file ? JSON.parse(file.content) : null;
+      }
+
+      async function syncToCloud() {
+        if (isSyncing || !githubToken) return;
+        isSyncing = true;
+        try {
+          document.getElementById('syncStatus').textContent = '🔄 Sync...';
+          document.getElementById('syncStatus').className = 'sync-status';
+          if (!gistId) {
+            gistId = await createGist();
+            localStorage.setItem('solo_gist_id', gistId);
+            document.getElementById('gistId').value = gistId;
+          } else {
+            await updateGist();
+          }
+          document.getElementById('syncStatus').textContent = '☁️ Tersimpan';
+          document.getElementById('syncStatus').className = 'sync-status';
+        } catch (e) {
+          document.getElementById('syncStatus').textContent = '❌ Gagal sync';
+          document.getElementById('syncStatus').className = 'sync-status offline';
+        } finally { isSyncing = false; }
+      }
+
+      function debouncedSync() {
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(syncToCloud, 2000);
+      }
+
+      async function loadFromCloud() {
+        if (!githubToken || !gistId) return;
+        try {
+          const data = await fetchGist();
+          if (data) {
+            state = { ...state, ...data };
+            document.getElementById('playerName').value = state.playerName || '';
+            document.getElementById('timezoneSelect').value = state.timezone || 'Asia/Makassar';
+            updateTimezoneDisplay();
+            renderAll();
+            showMessage('📥 Data berhasil dimuat dari cloud!');
+          }
+        } catch (e) { }
+      }
+
+      // ============ STREAK & HISTORY ============
+      function updateStreak() {
+        const today = getToday();
+        const yesterday = new Date(getNowInTimezone().getTime() - 86400000);
+        const yesterdayStr = yesterday.getFullYear() + '-' +
+          String(yesterday.getMonth() + 1).padStart(2, '0') + '-' +
+          String(yesterday.getDate()).padStart(2, '0');
+
+        if (state.lastActiveDate === yesterdayStr) {
+          state.streak = (state.streak || 0) + 1;
+        } else if (state.lastActiveDate !== today) {
+          state.streak = 1;
+        }
+        state.lastActiveDate = today;
+      }
+
+      function getActiveQuestsForToday() {
+        const dayIndex = getDayIndex();
+        let activeQuests = state.quests.filter(q => q.days && q.days.includes(dayIndex));
+        const scheduled = state.scheduledQuests[dayIndex.toString()] || [];
+        scheduled.forEach(sq => {
+          activeQuests.push({
+            id: 'sched_' + dayIndex + '_' + sq.text.replace(/\s/g, '_'),
+            text: sq.text,
+            stat: sq.stat,
+            isScheduled: true
+          });
+        });
+        return activeQuests;
+      }
+
+      // ============ RENDER FUNCTIONS ============
+      function renderDaily() {
+        const today = getToday();
+        if (state.dailyDate !== today) {
+          const yesterdayQuestsDone = state.completedQuests.filter(Boolean).length;
+          if (yesterdayQuestsDone > 0) updateStreak();
+          state.dailyDate = today;
+          state.completedQuests = [];
+          state.allQuestsDone = false;
+        }
+
+        const activeQuests = getActiveQuestsForToday();
+        while (state.completedQuests.length < activeQuests.length) state.completedQuests.push(false);
+        if (state.completedQuests.length > activeQuests.length) state.completedQuests = state.completedQuests.slice(0, activeQuests.length);
+
+        document.getElementById('currentDayLabel').textContent = DAYS[getDayIndex()] + ' (' + getTimezoneLabel() + ')';
+        const container = document.getElementById('questContainer');
+        container.innerHTML = '';
+
+        activeQuests.forEach((q, idx) => {
+          const completed = state.completedQuests[idx] || false;
+          const li = document.createElement('li');
+          li.className = `quest-item ${completed ? 'completed' : ''}`;
+          li.innerHTML = `
         <input type="checkbox" class="quest-check" data-index="${idx}" ${completed ? 'checked disabled' : ''}>
         <span class="quest-text">${escapeHtml(q.text)}</span>
         ${q.isScheduled ? '<span class="quest-day-badge">📅 Terjadwal</span>' : ''}
         <span class="stat-badge">+${q.stat}</span>
       `;
-      container.appendChild(li);
-    });
+          container.appendChild(li);
+        });
 
-    document.querySelectorAll('.quest-check').forEach(cb => {
-      cb.addEventListener('change', handleQuestCheck);
-    });
+        document.querySelectorAll('.quest-check').forEach(cb => {
+          cb.addEventListener('change', handleQuestCheck);
+        });
 
-    document.getElementById('streakDisplay').textContent = `🔥 Streak: ${state.streak || 0}`;
-    document.getElementById('totalExpDisplay').textContent = `⭐ EXP: ${state.totalExp}`;
-    document.getElementById('currentTimeDisplay').textContent = `🕐 ${getCurrentTimeString()} ${getTimezoneLabel()}`;
-  }
+        document.getElementById('streakDisplay').textContent = `🔥 Streak: ${state.streak || 0}`;
+        document.getElementById('totalExpDisplay').textContent = `⭐ EXP: ${state.totalExp}`;
+        document.getElementById('currentTimeDisplay').textContent = `🕐 ${getCurrentTimeString()} ${getTimezoneLabel()}`;
+      }
 
-  function handleQuestCheck(e) {
-    const index = parseInt(e.target.dataset.index);
-    const activeQuests = getActiveQuestsForToday();
-    if (isNaN(index) || index >= activeQuests.length || state.completedQuests[index]) return;
+      function handleQuestCheck(e) {
+        const index = parseInt(e.target.dataset.index);
+        const activeQuests = getActiveQuestsForToday();
+        if (isNaN(index) || index >= activeQuests.length || state.completedQuests[index]) return;
 
-    state.completedQuests[index] = true;
-    const quest = activeQuests[index];
-    const statKey = quest.stat;
-    state.stats[statKey] = (state.stats[statKey] || 0) + 1;
+        state.completedQuests[index] = true;
+        const quest = activeQuests[index];
+        const statKey = quest.stat;
+        state.stats[statKey] = (state.stats[statKey] || 0) + 1;
 
-    let expGain = quest.isScheduled ? 20 : 10;
-    state.totalExp += expGain;
-    const today = getToday();
-    state.expHistory[today] = (state.expHistory[today] || 0) + expGain;
+        let expGain = quest.isScheduled ? 20 : 10;
+        state.totalExp += expGain;
+        const today = getToday();
+        state.expHistory[today] = (state.expHistory[today] || 0) + expGain;
 
-    const allDone = state.completedQuests.every(v => v === true);
-    if (allDone && !state.allQuestsDone) {
-      state.totalExp += 50;
-      state.expHistory[today] = (state.expHistory[today] || 0) + 50;
-      state.allQuestsDone = true;
-      showMessage('🎉 Semua quest selesai! Bonus EXP +50!');
-      sendNotification('🎉 Quest Selesai!', 'Kamu menyelesaikan semua quest hari ini! +50 EXP Bonus!', '🌟');
-    } else {
-      showMessage(`✅ Quest ${statKey} selesai! +${expGain} EXP`);
-    }
+        const allDone = state.completedQuests.every(v => v === true);
+        if (allDone && !state.allQuestsDone) {
+          state.totalExp += 50;
+          state.expHistory[today] = (state.expHistory[today] || 0) + 50;
+          state.allQuestsDone = true;
+          showMessage('🎉 Semua quest selesai! Bonus EXP +50!');
+          sendNotification('🎉 Quest Selesai!', 'Kamu menyelesaikan semua quest hari ini! +50 EXP Bonus!', '🌟');
+        } else {
+          showMessage(`✅ Quest ${statKey} selesai! +${expGain} EXP`);
+        }
 
-    updateStreak();
-    checkAchievements();
-    debouncedSync();
-    renderAll();
-  }
+        updateStreak();
+        checkAchievements();
+        debouncedSync();
+        renderAll();
+      }
 
-  function renderStats() {
-    const container = document.getElementById('statsContainer');
-    container.innerHTML = '';
-    const statKeys = Object.keys(state.stats).sort();
-    if (statKeys.length === 0) {
-      container.innerHTML = '<p style="color:#888;">Belum ada stat. Selesaikan quest!</p>';
-    } else {
-      statKeys.forEach(key => {
-        const val = state.stats[key] || 0;
-        const percent = Math.min((val / 100) * 100, 100);
-        const div = document.createElement('div');
-        div.className = 'stat-row';
-        div.innerHTML = `
+      function renderStats() {
+        const container = document.getElementById('statsContainer');
+        container.innerHTML = '';
+        const statKeys = Object.keys(state.stats).sort();
+        if (statKeys.length === 0) {
+          container.innerHTML = '<p style="color:#888;">Belum ada stat. Selesaikan quest!</p>';
+        } else {
+          statKeys.forEach(key => {
+            const val = state.stats[key] || 0;
+            const percent = Math.min((val / 100) * 100, 100);
+            const div = document.createElement('div');
+            div.className = 'stat-row';
+            div.innerHTML = `
           <span class="stat-label">${key}</span>
           <div class="stat-bar-bg"><div class="stat-bar-fill" style="width:${percent}%"></div></div>
           <span class="stat-value">${val}</span>
         `;
-        container.appendChild(div);
-      });
-    }
-
-    const level = getLevel(state.totalExp);
-    const nextThresh = expForNextLevel(state.totalExp);
-    const expInLevel = state.totalExp - (level - 1) * 100;
-    const expPercent = Math.min((expInLevel / 100) * 100, 100);
-    document.getElementById('expBarFill').style.width = `${expPercent}%`;
-    document.getElementById('expText').textContent = `${state.totalExp} / ${nextThresh}`;
-    document.getElementById('levelDisplay').textContent = `Lv. ${level}`;
-    document.getElementById('streakDisplay').textContent = `🔥 Streak: ${state.streak || 0}`;
-    document.getElementById('totalExpDisplay').textContent = `⭐ EXP: ${state.totalExp}`;
-    document.getElementById('currentTimeDisplay').textContent = `🕐 ${getCurrentTimeString()} ${getTimezoneLabel()}`;
-
-    renderExpChart();
-    renderStreakHistory();
-  }
-
-  function renderExpChart() {
-    const ctx = document.getElementById('expChart').getContext('2d');
-    if (expChart) expChart.destroy();
-    const last7Days = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(getNowInTimezone().getTime() - i * 86400000);
-      const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
-      last7Days.push({ date: dateStr, label: DAYS[d.getDay()].substring(0, 3), exp: state.expHistory[dateStr] || 0 });
-    }
-    expChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: last7Days.map(d => d.label),
-        datasets: [{
-          label: 'EXP Harian',
-          data: last7Days.map(d => d.exp),
-          backgroundColor: 'rgba(106, 74, 255, 0.6)',
-          borderColor: '#8a6aff',
-          borderWidth: 2,
-          borderRadius: 8
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#c0c0e0' } } },
-        scales: {
-          x: { ticks: { color: '#888' }, grid: { color: '#2a2a40' } },
-          y: { ticks: { color: '#888' }, grid: { color: '#2a2a40' }, beginAtZero: true }
+            container.appendChild(div);
+          });
         }
-      }
-    });
-  }
 
-  function renderStreakHistory() {
-    const container = document.getElementById('streakHistory');
-    container.innerHTML = '';
-    const last7Days = [];
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(getNowInTimezone().getTime() - i * 86400000);
-      last7Days.push(d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'));
-    }
-    last7Days.forEach(dateStr => {
-      const hasExp = (state.expHistory[dateStr] || 0) > 0;
-      const div = document.createElement('div');
-      div.style.cssText = `
+        const level = getLevel(state.totalExp);
+        const nextThresh = expForNextLevel(state.totalExp);
+        const expInLevel = state.totalExp - (level - 1) * 100;
+        const expPercent = Math.min((expInLevel / 100) * 100, 100);
+        document.getElementById('expBarFill').style.width = `${expPercent}%`;
+        document.getElementById('expText').textContent = `${state.totalExp} / ${nextThresh}`;
+        document.getElementById('levelDisplay').textContent = `Lv. ${level}`;
+        document.getElementById('streakDisplay').textContent = `🔥 Streak: ${state.streak || 0}`;
+        document.getElementById('totalExpDisplay').textContent = `⭐ EXP: ${state.totalExp}`;
+        document.getElementById('currentTimeDisplay').textContent = `🕐 ${getCurrentTimeString()} ${getTimezoneLabel()}`;
+
+        renderExpChart();
+        renderStreakHistory();
+      }
+
+      function renderExpChart() {
+        const ctx = document.getElementById('expChart').getContext('2d');
+        if (expChart) expChart.destroy();
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(getNowInTimezone().getTime() - i * 86400000);
+          const dateStr = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+          last7Days.push({ date: dateStr, label: DAYS[d.getDay()].substring(0, 3), exp: state.expHistory[dateStr] || 0 });
+        }
+        expChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: last7Days.map(d => d.label),
+            datasets: [{
+              label: 'EXP Harian',
+              data: last7Days.map(d => d.exp),
+              backgroundColor: 'rgba(106, 74, 255, 0.6)',
+              borderColor: '#8a6aff',
+              borderWidth: 2,
+              borderRadius: 8
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: '#c0c0e0' } } },
+            scales: {
+              x: { ticks: { color: '#888' }, grid: { color: '#2a2a40' } },
+              y: { ticks: { color: '#888' }, grid: { color: '#2a2a40' }, beginAtZero: true }
+            }
+          }
+        });
+      }
+
+      function renderStreakHistory() {
+        const container = document.getElementById('streakHistory');
+        container.innerHTML = '';
+        const last7Days = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(getNowInTimezone().getTime() - i * 86400000);
+          last7Days.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
+        }
+        last7Days.forEach(dateStr => {
+          const hasExp = (state.expHistory[dateStr] || 0) > 0;
+          const div = document.createElement('div');
+          div.style.cssText = `
         width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;
         font-size:0.8rem;font-weight:bold;
         background:${hasExp ? '#2a4a2a' : '#1a1a2a'};
         border:2px solid ${hasExp ? '#4a8a4a' : '#3a3a5a'};
         color:${hasExp ? '#88ff88' : '#666'};
       `;
-      div.textContent = DAYS[new Date(dateStr + 'T00:00:00').getDay()].substring(0, 2);
-      div.title = `${dateStr}: ${state.expHistory[dateStr] || 0} EXP`;
-      container.appendChild(div);
-    });
-  }
+          div.textContent = DAYS[new Date(dateStr + 'T00:00:00').getDay()].substring(0, 2);
+          div.title = `${dateStr}: ${state.expHistory[dateStr] || 0} EXP`;
+          container.appendChild(div);
+        });
+      }
 
-  function renderSchedule() {
-    const dayButtons = document.getElementById('dayButtons');
-    dayButtons.innerHTML = '';
-    const today = getDayIndex();
-    DAYS.forEach((day, idx) => {
-      const btn = document.createElement('button');
-      btn.className = `day-btn ${idx === currentScheduleDay ? 'active' : ''} ${idx === today ? 'today' : ''}`;
-      btn.textContent = day.substring(0, 3);
-      btn.onclick = () => { currentScheduleDay = idx; renderSchedule(); };
-      dayButtons.appendChild(btn);
-    });
-    document.getElementById('selectedDayLabel').textContent = DAYS[currentScheduleDay] + ' (' + getTimezoneLabel() + ')';
-    const scheduled = state.scheduledQuests[currentScheduleDay.toString()] || [];
-    const list = document.getElementById('scheduledQuestList');
-    list.innerHTML = '';
-    scheduled.forEach((sq, idx) => {
-      const div = document.createElement('div');
-      div.className = 'scheduled-item';
-      div.innerHTML = `
+      function renderSchedule() {
+        const dayButtons = document.getElementById('dayButtons');
+        dayButtons.innerHTML = '';
+        const today = getDayIndex();
+        DAYS.forEach((day, idx) => {
+          const btn = document.createElement('button');
+          btn.className = `day-btn ${idx === currentScheduleDay ? 'active' : ''} ${idx === today ? 'today' : ''}`;
+          btn.textContent = day.substring(0, 3);
+          btn.onclick = () => { currentScheduleDay = idx; renderSchedule(); };
+          dayButtons.appendChild(btn);
+        });
+        document.getElementById('selectedDayLabel').textContent = DAYS[currentScheduleDay] + ' (' + getTimezoneLabel() + ')';
+        const scheduled = state.scheduledQuests[currentScheduleDay.toString()] || [];
+        const list = document.getElementById('scheduledQuestList');
+        list.innerHTML = '';
+        scheduled.forEach((sq, idx) => {
+          const div = document.createElement('div');
+          div.className = 'scheduled-item';
+          div.innerHTML = `
         <span style="flex:1;">${escapeHtml(sq.text)}</span>
         <span class="stat-badge">+${sq.stat}</span>
         <button class="btn danger small" data-idx="${idx}">🗑️</button>
       `;
-      div.querySelector('button').onclick = () => {
-        scheduled.splice(idx, 1);
-        state.scheduledQuests[currentScheduleDay.toString()] = scheduled;
-        renderSchedule();
-        debouncedSync();
-      };
-      list.appendChild(div);
-    });
-  }
+          div.querySelector('button').onclick = () => {
+            scheduled.splice(idx, 1);
+            state.scheduledQuests[currentScheduleDay.toString()] = scheduled;
+            renderSchedule();
+            debouncedSync();
+          };
+          list.appendChild(div);
+        });
+      }
 
-  function renderReminders() {
-    const container = document.getElementById('reminderList');
-    container.innerHTML = '';
-    const tzLabel = getTimezoneLabel();
-    state.reminders.forEach((reminder, idx) => {
-      const div = document.createElement('div');
-      div.className = `reminder-item ${reminder.enabled ? '' : 'disabled'}`;
-      div.innerHTML = `
+      function renderReminders() {
+        const container = document.getElementById('reminderList');
+        container.innerHTML = '';
+        const tzLabel = getTimezoneLabel();
+        state.reminders.forEach((reminder, idx) => {
+          const div = document.createElement('div');
+          div.className = `reminder-item ${reminder.enabled ? '' : 'disabled'}`;
+          div.innerHTML = `
         <span class="reminder-time">🕐 ${reminder.time}</span>
         <span class="reminder-msg">${escapeHtml(reminder.message)}</span>
         <span style="font-size:0.7rem;color:#888;">${tzLabel}</span>
@@ -1181,280 +1375,281 @@
         </label>
         <button class="btn danger small delete-reminder" data-idx="${idx}">🗑️</button>
       `;
-      container.appendChild(div);
-    });
+          container.appendChild(div);
+        });
 
-    document.querySelectorAll('.toggle-reminder').forEach(toggle => {
-      toggle.addEventListener('change', (e) => {
-        const idx = parseInt(e.target.dataset.idx);
-        state.reminders[idx].enabled = e.target.checked;
-        renderReminders();
-        scheduleAllReminders();
-        debouncedSync();
-      });
-    });
-    document.querySelectorAll('.delete-reminder').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const idx = parseInt(e.target.dataset.idx);
-        state.reminders.splice(idx, 1);
-        renderReminders();
-        scheduleAllReminders();
-        debouncedSync();
-      });
-    });
-  }
+        document.querySelectorAll('.toggle-reminder').forEach(toggle => {
+          toggle.addEventListener('change', (e) => {
+            const idx = parseInt(e.target.dataset.idx);
+            state.reminders[idx].enabled = e.target.checked;
+            renderReminders();
+            scheduleAllReminders();
+            debouncedSync();
+          });
+        });
+        document.querySelectorAll('.delete-reminder').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const idx = parseInt(e.target.dataset.idx);
+            state.reminders.splice(idx, 1);
+            renderReminders();
+            scheduleAllReminders();
+            debouncedSync();
+          });
+        });
+      }
 
-  function renderAchievements() {
-    const container = document.getElementById('achievementList');
-    container.innerHTML = '';
-    ACHIEVEMENTS.forEach(ach => {
-      const unlocked = state.unlockedAchievements.includes(ach.id) || ach.check(state);
-      const div = document.createElement('div');
-      div.className = `achievement ${unlocked ? 'unlocked' : ''}`;
-      div.innerHTML = `
+      function renderAchievements() {
+        const container = document.getElementById('achievementList');
+        container.innerHTML = '';
+        ACHIEVEMENTS.forEach(ach => {
+          const unlocked = state.unlockedAchievements.includes(ach.id) || ach.check(state);
+          const div = document.createElement('div');
+          div.className = `achievement ${unlocked ? 'unlocked' : ''}`;
+          div.innerHTML = `
         <div class="icon">${unlocked ? ach.icon : '🔒'}</div>
         <div class="name">${ach.name}</div>
         <div class="desc">${ach.desc}</div>
       `;
-      container.appendChild(div);
-    });
-  }
-
-  function checkAchievements() {
-    ACHIEVEMENTS.forEach(ach => {
-      if (!state.unlockedAchievements.includes(ach.id) && ach.check(state)) {
-        state.unlockedAchievements.push(ach.id);
-        showMessage(`🏆 Achievement Unlocked: ${ach.name}!`);
-        sendNotification('🏆 Achievement Unlocked!', ach.name, ach.icon);
+          container.appendChild(div);
+        });
       }
-    });
-    const hasCustom = state.quests.some(q => !DEFAULT_QUESTS.find(dq => dq.id === q.id));
-    if (hasCustom) state.hasCustomQuest = true;
-  }
 
-  function updateTimezoneDisplay() {
-    const tzLabel = getTimezoneLabel();
-    document.getElementById('footerTimezone').textContent = tzLabel;
-    document.getElementById('currentTimeDisplay').textContent = `🕐 ${getCurrentTimeString()} ${tzLabel}`;
-  }
+      function checkAchievements() {
+        ACHIEVEMENTS.forEach(ach => {
+          if (!state.unlockedAchievements.includes(ach.id) && ach.check(state)) {
+            state.unlockedAchievements.push(ach.id);
+            showMessage(`🏆 Achievement Unlocked: ${ach.name}!`);
+            sendNotification('🏆 Achievement Unlocked!', ach.name, ach.icon);
+          }
+        });
+        const hasCustom = state.quests.some(q => !DEFAULT_QUESTS.find(dq => dq.id === q.id));
+        if (hasCustom) state.hasCustomQuest = true;
+      }
 
-  function renderAll() {
-    renderDaily();
-    renderStats();
-    renderSchedule();
-    renderReminders();
-    renderAchievements();
-    document.getElementById('playerName').value = state.playerName || '';
-    updateNotifStatus();
-    updateTimezoneDisplay();
-  }
+      function updateTimezoneDisplay() {
+        const tzLabel = getTimezoneLabel();
+        document.getElementById('footerTimezone').textContent = tzLabel;
+        document.getElementById('currentTimeDisplay').textContent = `🕐 ${getCurrentTimeString()} ${tzLabel}`;
+      }
 
-  // ============ EVENT HANDLERS ============
-  document.getElementById('saveConfigBtn').addEventListener('click', async () => {
-    githubToken = document.getElementById('githubToken').value.trim();
-    const inputGistId = document.getElementById('gistId').value.trim();
-    if (!githubToken) { showMessage('❌ Token GitHub harus diisi!'); return; }
-    localStorage.setItem('solo_github_token', githubToken);
-    if (inputGistId) {
-      gistId = inputGistId;
-      localStorage.setItem('solo_gist_id', gistId);
-      await loadFromCloud();
-    } else {
-      gistId = '';
-      localStorage.removeItem('solo_gist_id');
-    }
-    await syncToCloud();
-    showMessage('✅ Konfigurasi tersimpan & tersinkron!');
-  });
-
-  document.getElementById('resetDailyBtn').addEventListener('click', () => {
-    state.dailyDate = '';
-    state.completedQuests = [];
-    state.allQuestsDone = false;
-    updateStreak();
-    debouncedSync();
-    renderAll();
-    showMessage('🌅 Quest harian di-reset!');
-  });
-
-  document.getElementById('playerName').addEventListener('input', (e) => {
-    state.playerName = e.target.value.trim();
-    debouncedSync();
-  });
-
-  // Timezone change handler
-  document.getElementById('timezoneSelect').addEventListener('change', (e) => {
-    state.timezone = e.target.value;
-    updateTimezoneDisplay();
-    
-    const today = getToday();
-    if (state.dailyDate !== today) {
-      state.dailyDate = today;
-      state.completedQuests = [];
-      state.allQuestsDone = false;
-    }
-    
-    scheduleAllReminders();
-    debouncedSync();
-    renderAll();
-    showMessage(`🌍 Zona waktu diubah ke ${getTimezoneLabel()}!`);
-  });
-
-  document.getElementById('addScheduledBtn').addEventListener('click', () => {
-    const text = document.getElementById('newScheduledQuest').value.trim();
-    if (!text) return;
-    const stat = document.getElementById('newScheduledStat').value;
-    const dayKey = currentScheduleDay.toString();
-    if (!state.scheduledQuests[dayKey]) state.scheduledQuests[dayKey] = [];
-    state.scheduledQuests[dayKey].push({ text, stat });
-    document.getElementById('newScheduledQuest').value = '';
-    renderSchedule();
-    debouncedSync();
-  });
-
-  // ============ FIXED: Tombol Notifikasi ============
-  document.getElementById('requestNotifPermBtn').addEventListener('click', async () => {
-    console.log('Tombol Aktifkan Notifikasi diklik');
-    const perm = await requestNotificationPermission();
-    if (perm === 'granted') {
-      scheduleAllReminders();
-    }
-  });
-
-  document.getElementById('testNotifBtn').addEventListener('click', () => {
-    console.log('Tombol Test Notifikasi diklik, izin:', notificationPermission);
-    if (notificationPermission === 'granted') {
-      const tzLabel = getTimezoneLabel();
-      sendNotification('🧪 Test Notifikasi', `Notifikasi berfungsi! Waktu: ${getCurrentTimeString()} ${tzLabel}`, '✅');
-      showMessage('🧪 Notifikasi test dikirim! Cek di luar browser.');
-    } else if (notificationPermission === 'denied') {
-      showMessage('❌ Notifikasi diblokir! Buka Settings HP > Apps > Chrome > Notifications > Izinkan.');
-    } else {
-      showMessage('⚠️ Klik "Aktifkan Notifikasi" dulu!');
-      requestNotificationPermission();
-    }
-  });
-  
-  document.getElementById('addReminderBtn').addEventListener('click', () => {
-    const time = document.getElementById('newReminderTime').value;
-    const msg = document.getElementById('newReminderMsg').value.trim();
-    if (!time || !msg) { showMessage('Isi waktu dan pesan reminder!'); return; }
-    state.reminders.push({
-      id: Date.now().toString(),
-      time: time,
-      message: msg,
-      enabled: true,
-      days: [0,1,2,3,4,5,6]
-    });
-    document.getElementById('newReminderMsg').value = 'Waktunya selesaikan quest! 🔥';
-    renderReminders();
-    scheduleAllReminders();
-    debouncedSync();
-    showMessage('✅ Reminder baru ditambahkan!');
-  });
-
-  // Tab switching
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const tabName = btn.dataset.tab;
-      document.getElementById('tabDaily').classList.add('hidden');
-      document.getElementById('tabSchedule').classList.add('hidden');
-      document.getElementById('tabReminders').classList.add('hidden');
-      document.getElementById('tabStats').classList.add('hidden');
-      document.getElementById('tabAchievements').classList.add('hidden');
-      document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.remove('hidden');
-    });
-  });
-
-  // Klik jam WITA untuk minta izin notifikasi
-  window.addEventListener('timezoneChanged', () => {
-    if (Notification.permission === 'default') {
-      Notification.requestPermission().then(perm => {
-        notificationPermission = perm;
+      function renderAll() {
+        renderDaily();
+        renderStats();
+        renderSchedule();
+        renderReminders();
+        renderAchievements();
+        document.getElementById('playerName').value = state.playerName || '';
         updateNotifStatus();
-        if (perm === 'granted') scheduleAllReminders();
+        updateTimezoneDisplay();
+      }
+
+      // ============ EVENT HANDLERS ============
+      document.getElementById('saveConfigBtn').addEventListener('click', async () => {
+        githubToken = document.getElementById('githubToken').value.trim();
+        const inputGistId = document.getElementById('gistId').value.trim();
+        if (!githubToken) { showMessage('❌ Token GitHub harus diisi!'); return; }
+        localStorage.setItem('solo_github_token', githubToken);
+        if (inputGistId) {
+          gistId = inputGistId;
+          localStorage.setItem('solo_gist_id', gistId);
+          await loadFromCloud();
+        } else {
+          gistId = '';
+          localStorage.removeItem('solo_gist_id');
+        }
+        await syncToCloud();
+        showMessage('✅ Konfigurasi tersimpan & tersinkron!');
       });
-    }
-  });
 
-  // ============ INIT ============
-  async function init() {
-    githubToken = localStorage.getItem('solo_github_token') || '';
-    gistId = localStorage.getItem('solo_gist_id') || '';
-    document.getElementById('githubToken').value = githubToken;
-    document.getElementById('gistId').value = gistId;
-
-    const saved = localStorage.getItem('solo_pro_max_local');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        state = { ...state, ...parsed };
-      } catch(e) {}
-    }
-
-    state.scheduledQuests = state.scheduledQuests || {};
-    state.expHistory = state.expHistory || {};
-    state.unlockedAchievements = state.unlockedAchievements || [];
-    state.reminders = state.reminders || [];
-    state.timezone = state.timezone || 'Asia/Makassar';
-    if (!state.quests || state.quests.length === 0) state.quests = JSON.parse(JSON.stringify(DEFAULT_QUESTS));
-
-    document.getElementById('timezoneSelect').value = state.timezone;
-    
-    await checkNotificationPermission();
-    renderAll();
-    document.getElementById('playerName').value = state.playerName || '';
-
-    if (githubToken && gistId) {
-      await loadFromCloud();
-      renderAll();
-    }
-
-    scheduleAllReminders();
-
-    if (clockInterval) clearInterval(clockInterval);
-    clockInterval = setInterval(() => {
-      document.getElementById('currentTimeDisplay').textContent = `🕐 ${getCurrentTimeString()} ${getTimezoneLabel()}`;
-    }, 1000);
-
-    setInterval(() => {
-      scheduleAllReminders();
-      const today = getToday();
-      if (state.dailyDate !== today) {
-        state.dailyDate = today;
+      document.getElementById('resetDailyBtn').addEventListener('click', () => {
+        state.dailyDate = '';
         state.completedQuests = [];
         state.allQuestsDone = false;
         updateStreak();
         debouncedSync();
         renderAll();
-      }
-    }, 60000);
+        showMessage('🌅 Quest harian di-reset!');
+      });
 
-    window.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
+      document.getElementById('playerName').addEventListener('input', (e) => {
+        state.playerName = e.target.value.trim();
+        debouncedSync();
+      });
+
+      // Timezone change handler
+      document.getElementById('timezoneSelect').addEventListener('change', (e) => {
+        state.timezone = e.target.value;
+        updateTimezoneDisplay();
+
         const today = getToday();
         if (state.dailyDate !== today) {
           state.dailyDate = today;
           state.completedQuests = [];
           state.allQuestsDone = false;
-          updateStreak();
-          debouncedSync();
+        }
+
+        scheduleAllReminders();
+        debouncedSync();
+        renderAll();
+        showMessage(`🌍 Zona waktu diubah ke ${getTimezoneLabel()}!`);
+      });
+
+      document.getElementById('addScheduledBtn').addEventListener('click', () => {
+        const text = document.getElementById('newScheduledQuest').value.trim();
+        if (!text) return;
+        const stat = document.getElementById('newScheduledStat').value;
+        const dayKey = currentScheduleDay.toString();
+        if (!state.scheduledQuests[dayKey]) state.scheduledQuests[dayKey] = [];
+        state.scheduledQuests[dayKey].push({ text, stat });
+        document.getElementById('newScheduledQuest').value = '';
+        renderSchedule();
+        debouncedSync();
+      });
+
+      // ============ FIXED: Tombol Notifikasi ============
+      document.getElementById('requestNotifPermBtn').addEventListener('click', async () => {
+        console.log('Tombol Aktifkan Notifikasi diklik');
+        const perm = await requestNotificationPermission();
+        if (perm === 'granted') {
+          scheduleAllReminders();
+        }
+      });
+
+      document.getElementById('testNotifBtn').addEventListener('click', () => {
+        console.log('Tombol Test Notifikasi diklik, izin:', notificationPermission);
+        if (notificationPermission === 'granted') {
+          const tzLabel = getTimezoneLabel();
+          sendNotification('🧪 Test Notifikasi', `Notifikasi berfungsi! Waktu: ${getCurrentTimeString()} ${tzLabel}`, '✅');
+          showMessage('🧪 Notifikasi test dikirim! Cek di luar browser.');
+        } else if (notificationPermission === 'denied') {
+          showMessage('❌ Notifikasi diblokir! Buka Settings HP > Apps > Chrome > Notifications > Izinkan.');
+        } else {
+          showMessage('⚠️ Klik "Aktifkan Notifikasi" dulu!');
+          requestNotificationPermission();
+        }
+      });
+
+      document.getElementById('addReminderBtn').addEventListener('click', () => {
+        const time = document.getElementById('newReminderTime').value;
+        const msg = document.getElementById('newReminderMsg').value.trim();
+        if (!time || !msg) { showMessage('Isi waktu dan pesan reminder!'); return; }
+        state.reminders.push({
+          id: Date.now().toString(),
+          time: time,
+          message: msg,
+          enabled: true,
+          days: [0, 1, 2, 3, 4, 5, 6]
+        });
+        document.getElementById('newReminderMsg').value = 'Waktunya selesaikan quest! 🔥';
+        renderReminders();
+        scheduleAllReminders();
+        debouncedSync();
+        showMessage('✅ Reminder baru ditambahkan!');
+      });
+
+      // Tab switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const tabName = btn.dataset.tab;
+          document.getElementById('tabDaily').classList.add('hidden');
+          document.getElementById('tabSchedule').classList.add('hidden');
+          document.getElementById('tabReminders').classList.add('hidden');
+          document.getElementById('tabStats').classList.add('hidden');
+          document.getElementById('tabAchievements').classList.add('hidden');
+          document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1)).classList.remove('hidden');
+        });
+      });
+
+      // Klik jam WITA untuk minta izin notifikasi
+      window.addEventListener('timezoneChanged', () => {
+        if (Notification.permission === 'default') {
+          Notification.requestPermission().then(perm => {
+            notificationPermission = perm;
+            updateNotifStatus();
+            if (perm === 'granted') scheduleAllReminders();
+          });
+        }
+      });
+
+      // ============ INIT ============
+      async function init() {
+        githubToken = localStorage.getItem('solo_github_token') || '';
+        gistId = localStorage.getItem('solo_gist_id') || '';
+        document.getElementById('githubToken').value = githubToken;
+        document.getElementById('gistId').value = gistId;
+
+        const saved = localStorage.getItem('solo_pro_max_local');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            state = { ...state, ...parsed };
+          } catch (e) { }
+        }
+
+        state.scheduledQuests = state.scheduledQuests || {};
+        state.expHistory = state.expHistory || {};
+        state.unlockedAchievements = state.unlockedAchievements || [];
+        state.reminders = state.reminders || [];
+        state.timezone = state.timezone || 'Asia/Makassar';
+        if (!state.quests || state.quests.length === 0) state.quests = JSON.parse(JSON.stringify(DEFAULT_QUESTS));
+
+        document.getElementById('timezoneSelect').value = state.timezone;
+
+        await checkNotificationPermission();
+        renderAll();
+        document.getElementById('playerName').value = state.playerName || '';
+
+        if (githubToken && gistId) {
+          await loadFromCloud();
           renderAll();
         }
+
         scheduleAllReminders();
-        updateTimezoneDisplay();
+
+        if (clockInterval) clearInterval(clockInterval);
+        clockInterval = setInterval(() => {
+          document.getElementById('currentTimeDisplay').textContent = `🕐 ${getCurrentTimeString()} ${getTimezoneLabel()}`;
+        }, 1000);
+
+        setInterval(() => {
+          scheduleAllReminders();
+          const today = getToday();
+          if (state.dailyDate !== today) {
+            state.dailyDate = today;
+            state.completedQuests = [];
+            state.allQuestsDone = false;
+            updateStreak();
+            debouncedSync();
+            renderAll();
+          }
+        }, 60000);
+
+        window.addEventListener('visibilitychange', () => {
+          if (!document.hidden) {
+            const today = getToday();
+            if (state.dailyDate !== today) {
+              state.dailyDate = today;
+              state.completedQuests = [];
+              state.allQuestsDone = false;
+              updateStreak();
+              debouncedSync();
+              renderAll();
+            }
+            scheduleAllReminders();
+            updateTimezoneDisplay();
+          }
+        });
+
+        setInterval(() => {
+          localStorage.setItem('solo_pro_max_local', JSON.stringify(state));
+        }, 3000);
       }
-    });
 
-    setInterval(() => {
-      localStorage.setItem('solo_pro_max_local', JSON.stringify(state));
-    }, 3000);
-  }
-
-  init();
-})();
-</script>
+      init();
+    })();
+  </script>
 </body>
+
 </html>
