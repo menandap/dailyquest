@@ -748,6 +748,7 @@
     const EMAILJS_PUBLIC_KEY = "WVcajjc-f2VRY8W9Q"; // Public Key dari EmailJS
     const EMAILJS_SERVICE_ID = "service_0j4uhxh"; // Service ID dari EmailJS
     const EMAILJS_TEMPLATE_ID = "template_knzkzyg"; // Template ID dari EmailJS
+    const EMAILJS_REMINDER_TEMPLATE_ID = "template_bbfjrph";
     emailjs.init(EMAILJS_PUBLIC_KEY);
     // ==============================================
 
@@ -919,7 +920,7 @@
           updateNotifStatus();
           if (perm === 'granted') {
             showMessage('✅ Notifikasi diaktifkan!');
-            scheduleAllReminders();
+            scheduleAllReminders(true); 
           } else if (perm === 'denied') {
             showMessage('❌ Notifikasi ditolak. Notifikasi akan dikirim via email sebagai gantinya.');
           }
@@ -983,6 +984,34 @@
           });
       }
 
+      // Fungsi khusus untuk notifikasi reminder (tanpa quest list)
+      function sendReminderNotification(message) {
+        // Coba notifikasi browser dulu
+        if (notificationPermission === 'granted') {
+          try {
+            new Notification('⚔️ Solo Leveling Reminder', {
+              body: message,
+              icon: '⏰',
+              tag: 'solo-reminder',
+              requireInteraction: true,
+            });
+            console.log('✅ Reminder browser terkirim');
+            return;
+          } catch (e) { }
+        }
+
+        // Fallback email dengan template khusus reminder
+        const templateParams = {
+          player_name: state.playerName || 'Player',
+          reminder_message: message,
+          time: getCurrentTimeString()
+        };
+
+        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_REMINDER_TEMPLATE_ID, templateParams)
+          .then(r => console.log('✅ Email reminder terkirim'))
+          .catch(e => console.log('❌ Gagal kirim email reminder', e));
+      }
+
       function clearAllReminderTimers() {
         reminderTimers.forEach(t => clearTimeout(t));
         reminderTimers = [];
@@ -990,12 +1019,11 @@
 
       // Ubah fungsi menjadi menerima parameter forceClear
       function scheduleAllReminders(forceClear = false) {
-        if (forceClear) {
-          clearAllReminderTimers();
-        }
+        if (forceClear) clearAllReminderTimers();
 
         const now = getNowInTimezone();
         const today = now.getDay();
+        const todayStr = getToday();
         const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
         state.reminders.forEach(reminder => {
@@ -1005,31 +1033,26 @@
           const [h, m] = reminder.time.split(':').map(Number);
           const reminderMinutes = h * 60 + m;
 
-          // Kalau sudah lewat 1 menit atau lebih, langsung kirim notifikasi sekarang
+          // Jika waktunya sudah lewat, kirim langsung (hanya sekali per hari)
           if (reminderMinutes <= currentMinutes) {
-            // Cek apakah reminder ini sudah pernah dikirim hari ini (pakai properti 'lastSent')
-            const todayStr = getToday();
             if (reminder.lastSent !== todayStr) {
-              // Tandai sudah dikirim agar tidak spam
               reminder.lastSent = todayStr;
-              console.log(`🚨 Reminder ${reminder.time} terlewat, kirim sekarang!`);
-              sendNotification('⚔️ Solo Leveling Reminder', reminder.message, '⏰');
-              // Karena sudah dikirim, disable sementara (akan di-reset saat ganti hari)
-              reminder.enabled = false;
-              setTimeout(() => { reminder.enabled = true; }, 1000); // aktifkan lagi agar bisa dipakai besok
+              sendReminderNotification(reminder.message);
+              console.log(`🚀 Reminder ${reminder.time} dikirim (terlewat).`);
             }
             return;
           }
 
-          // Jika belum lewat, jadwalkan seperti biasa
+          // Jadwalkan pengiriman
           const delayMs = (reminderMinutes - currentMinutes) * 60 * 1000;
           const timer = setTimeout(() => {
-            sendNotification('⚔️ Solo Leveling Reminder', reminder.message, '⏰');
-            // Tandai sudah dikirim
-            reminder.lastSent = getToday();
+            if (reminder.lastSent !== todayStr) {
+              reminder.lastSent = todayStr;
+              sendReminderNotification(reminder.message);
+            }
           }, delayMs);
           reminderTimers.push(timer);
-          console.log(`⏱ Reminder ${reminder.time} dijadwalkan dalam ${delayMs / 60000} menit via ${notificationPermission === 'granted' ? 'browser' : 'email'}`);
+          console.log(`⏱ Reminder ${reminder.time} dijadwalkan ${delayMs / 60000} menit lagi`);
         });
       }
 
@@ -1360,7 +1383,7 @@
             const idx = parseInt(e.target.dataset.idx);
             state.reminders[idx].enabled = e.target.checked;
             renderReminders();
-            scheduleAllReminders();
+            scheduleAllReminders(true);
             debouncedSync();
           });
         });
@@ -1369,7 +1392,7 @@
             const idx = parseInt(e.target.dataset.idx);
             state.reminders.splice(idx, 1);
             renderReminders();
-            scheduleAllReminders();
+            scheduleAllReminders(true);
             debouncedSync();
           });
         });
@@ -1462,7 +1485,7 @@
           state.completedQuests = [];
           state.allQuestsDone = false;
         }
-        scheduleAllReminders();
+        scheduleAllReminders(true);
         debouncedSync();
         renderAll();
         showMessage(`🌍 Zona waktu diubah ke ${getTimezoneLabel()}!`);
@@ -1485,7 +1508,7 @@
         if (notificationPermission !== 'granted') {
           showMessage('ℹ️ Notifikasi browser tidak diizinkan. Notifikasi akan tetap dikirim via email.');
         }
-        scheduleAllReminders();
+        scheduleAllReminders(true)
       });
 
       document.getElementById('testNotifBtn').addEventListener('click', () => {
@@ -1506,7 +1529,7 @@
         });
         document.getElementById('newReminderMsg').value = 'Waktunya selesaikan quest! 🔥';
         renderReminders();
-        scheduleAllReminders();
+        scheduleAllReminders(true)
         debouncedSync();
         showMessage('✅ Reminder baru ditambahkan!');
       });
@@ -1579,7 +1602,7 @@
           state.timezone = tzKeys[nextIndex];
           updateTimezoneDisplay();
           updateTimeDisplay();
-          scheduleAllReminders();
+          scheduleAllReminders(true);
           debouncedSync();
         };
 
@@ -1661,7 +1684,7 @@
           renderAll();
         }
 
-        scheduleAllReminders();
+        scheduleAllReminders(true);
 
         if (clockInterval) clearInterval(clockInterval);
         clockInterval = setInterval(() => {
