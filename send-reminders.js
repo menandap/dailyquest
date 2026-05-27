@@ -8,7 +8,7 @@ const {
   EMAILJS_PRIVATE_KEY,
   EMAILJS_SERVICE_ID,
   EMAILJS_REMINDER_TEMPLATE_ID,
-  EMAILJS_DAILY_TEMPLATE_ID,  // TAMBAHKAN: untuk template daily quest
+  EMAILJS_DAILY_TEMPLATE_ID,
   TIMEZONE
 } = process.env;
 
@@ -17,6 +17,7 @@ emailjs.init({
   privateKey: EMAILJS_PRIVATE_KEY
 });
 
+// ========== TIMEZONE ==========
 function getNowInTimezone(tz) {
   if (!tz || tz === 'auto') return new Date();
   try {
@@ -45,6 +46,11 @@ function getTodayStr(tz) {
          String(now.getDate()).padStart(2, '0');
 }
 
+function getMonthName(month) {
+  return ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'][month];
+}
+
+// ========== GIST API ==========
 async function getGistData() {
   const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
     headers: { Authorization: `token ${GITHUB_TOKEN}` }
@@ -69,7 +75,7 @@ function getLevel(exp) { return Math.floor(exp / 100) + 1; }
 
 function getActiveQuestsForToday(state, dayIndex) {
   let activeQuests = state.quests.filter(q => q.days && q.days.includes(dayIndex));
-  const scheduled = state.scheduledQuests[dayIndex.toString()] || [];
+  const scheduled = state.scheduledQuests?.[dayIndex.toString()] || [];
   scheduled.forEach(sq => {
     activeQuests.push({
       id: 'sched_' + dayIndex + '_' + sq.text.replace(/\s/g, '_'),
@@ -81,30 +87,29 @@ function getActiveQuestsForToday(state, dayIndex) {
   return activeQuests;
 }
 
-// ========== KIRIM DAILY QUEST REPORT ==========
+// ========== DAILY QUEST REPORT (Jam 6 Pagi) ==========
 async function sendDailyQuestReport(state, now) {
   const todayIndex = now.getDay();
   const todayStr = getTodayStr(TIMEZONE);
   
-  // Cek apakah sudah dikirim hari ini
   if (state.lastDailySent === todayStr) {
     console.log('📅 Daily quest sudah dikirim hari ini, skip');
     return false;
   }
   
   const activeQuests = getActiveQuestsForToday(state, todayIndex);
+  const completedQuests = state.completedQuests || [];
   
-  // Buat daftar quest dalam format teks
   let questList = '';
   activeQuests.forEach((q, idx) => {
-    const completed = state.completedQuests[idx] ? '[✅]' : '[⬜]';
+    const completed = (completedQuests[idx] === true) ? '✅' : '⬜';
     questList += `${completed} ${q.text} (+${q.stat})\n`;
   });
   
   const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
   const formattedDate = `${days[todayIndex]}, ${now.getDate()} ${getMonthName(now.getMonth())} ${now.getFullYear()}`;
   
-  const level = getLevel(state.totalExp);
+  const level = getLevel(state.totalExp || 0);
   const streak = state.streak || 0;
   
   try {
@@ -118,34 +123,23 @@ async function sendDailyQuestReport(state, now) {
     console.log(`✅ Daily quest report terkirim untuk ${formattedDate}`);
     return true;
   } catch(err) {
-    console.log(`❌ Gagal kirim daily quest:`, err.message);
+    console.log(`❌ Gagal kirim daily quest: ${err.message || 'unknown'}`);
     return false;
   }
 }
 
-function getMonthName(month) {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-  return months[month];
-}
-
-// ========== KIRIM REMINDER BIASA ==========
+// ========== REMINDER BIASA ==========
 async function sendReminder(reminder, state, todayStr) {
   try {
-    const templateParams = {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_REMINDER_TEMPLATE_ID, {
       player_name: state.playerName || 'Player',
       reminder_message: reminder.message,
       time: reminder.time
-    };
-    
-    const result = await emailjs.send(
-      EMAILJS_SERVICE_ID, 
-      EMAILJS_REMINDER_TEMPLATE_ID, 
-      templateParams
-    );
-    console.log(`✅ Reminder ${reminder.time} terkirim via email (status: ${result.status})`);
+    });
+    console.log(`✅ Reminder ${reminder.time} terkirim via email`);
     return true;
   } catch(err) {
-    console.log(`❌ Gagal kirim reminder ${reminder.time}: ${err.message || 'unknown error'}`);
+    console.log(`❌ Gagal kirim reminder ${reminder.time}: ${err.message || 'unknown'}`);
     return false;
   }
 }
@@ -162,46 +156,37 @@ async function sendReminder(reminder, state, todayStr) {
     }
 
     const now = getNowInTimezone(TIMEZONE || 'Asia/Makassar');
-    const today = now.getDay();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
     const todayStr = getTodayStr(TIMEZONE || 'Asia/Makassar');
     let modified = false;
 
-    console.log(`🕐 Waktu sekarang: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} WITA`);
-    console.log(`📅 Hari ini: ${['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][today]}, ${todayStr}`);
+    console.log(`🕐 Waktu: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')} WITA`);
+    console.log(`📅 Hari: ${['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][now.getDay()]}, ${todayStr}`);
 
-    // ========== CEK DAILY QUEST REPORT (Jam 6 Pagi) ==========
-    // 6:00 = 360 menit
+    // ========== DAILY QUEST (Jam 6:00 - 6:04) ==========
     if (currentMinutes >= 360 && currentMinutes < 365) {
-      console.log('📧 Mengecek daily quest report (jam 6 pagi)...');
+      console.log('📧 Waktu daily quest report (jam 6 pagi)...');
       const sent = await sendDailyQuestReport(state, now);
       if (sent) {
         state.lastDailySent = todayStr;
         modified = true;
       }
-    } else {
-      console.log(`⏳ Daily quest report: belum waktunya (${currentMinutes} menit, target 360-365)`);
     }
 
-    // ========== CEK REMINDER BIASA ==========
+    // ========== REMINDER BIASA ==========
     if (state.reminders && state.reminders.length > 0) {
-      console.log(`📋 Total reminder biasa: ${state.reminders.length}`);
-      
       for (const reminder of state.reminders) {
         if (!reminder.enabled) continue;
-        if (!reminder.days || !reminder.days.includes(today)) continue;
+        if (!reminder.days?.includes(now.getDay())) continue;
 
         const [h, m] = reminder.time.split(':').map(Number);
         const reminderMinutes = h * 60 + m;
 
-        // Cek dalam rentang 5 menit terakhir
         if (reminderMinutes <= currentMinutes && reminderMinutes > currentMinutes - 5) {
           if (reminder.lastSent !== todayStr) {
             reminder.lastSent = todayStr;
             modified = true;
             await sendReminder(reminder, state, todayStr);
-          } else {
-            console.log(`⏭ Reminder ${reminder.time} sudah dikirim hari ini, skip`);
           }
         }
       }
@@ -209,7 +194,7 @@ async function sendReminder(reminder, state, todayStr) {
 
     if (modified) {
       await updateGist(state);
-      console.log('💾 Status pengiriman diperbarui di Gist.');
+      console.log('💾 Status diperbarui di Gist.');
     } else {
       console.log('✅ Tidak ada yang perlu dikirim.');
     }
