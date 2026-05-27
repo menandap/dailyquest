@@ -20,7 +20,10 @@ console.log('EMAILJS_REMINDER_TEMPLATE_ID:', EMAILJS_REMINDER_TEMPLATE_ID ? '✅
 console.log('TIMEZONE:', TIMEZONE || 'Asia/Makassar (default)');
 console.log('========================\n');
 
-emailjs.init(EMAILJS_PUBLIC_KEY);
+emailjs.init({
+  publicKey: EMAILJS_PUBLIC_KEY,
+  privateKey: process.env.EMAILJS_PRIVATE_KEY
+});
 
 // ========== TIMEZONE UTILITIES ==========
 function getNowInTimezone(tz) {

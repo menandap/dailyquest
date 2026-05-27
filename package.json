@@ -4,6 +4,6 @@
   "private": true,
   "dependencies": {
     "@emailjs/nodejs": "^4.0.0",
-    "node-fetch": "2"
+    "node-fetch": "^2.7.0"
   }
 }
