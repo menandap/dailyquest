@@ -25,8 +25,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GIST_TOKEN }}
           GIST_ID: ${{ secrets.GIST_ID }}
           EMAILJS_PUBLIC_KEY: ${{ secrets.EMAILJS_PUBLIC_KEY }}
-          EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}  # ← TAMBAHKAN INI
+          EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
           EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
           EMAILJS_REMINDER_TEMPLATE_ID: ${{ secrets.EMAILJS_REMINDER_TEMPLATE_ID }}
+          EMAILJS_DAILY_TEMPLATE_ID: ${{ secrets.EMAILJS_DAILY_TEMPLATE_ID }}  # ← TAMBAHKAN
           TIMEZONE: 'Asia/Makassar'
         run: node send-reminders.js

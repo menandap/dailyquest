@@ -8,27 +8,15 @@ const {
   EMAILJS_PRIVATE_KEY,
   EMAILJS_SERVICE_ID,
   EMAILJS_REMINDER_TEMPLATE_ID,
+  EMAILJS_DAILY_TEMPLATE_ID,  // TAMBAHKAN: untuk template daily quest
   TIMEZONE
 } = process.env;
 
-// ========== DEBUG: Cek semua secrets ==========
-console.log('🔐 ===== CEK SECRETS =====');
-console.log('GIST_ID:', GIST_ID ? GIST_ID.substring(0, 10) + '...' : '❌ KOSONG');
-console.log('GITHUB_TOKEN:', GITHUB_TOKEN ? '✅ Ada (length: ' + GITHUB_TOKEN.length + ')' : '❌ KOSONG');
-console.log('EMAILJS_PUBLIC_KEY:', EMAILJS_PUBLIC_KEY ? '✅ Ada' : '❌ KOSONG');
-console.log('EMAILJS_PRIVATE_KEY:', EMAILJS_PRIVATE_KEY ? '✅ Ada (length: ' + EMAILJS_PRIVATE_KEY.length + ')' : '❌ KOSONG');
-console.log('EMAILJS_SERVICE_ID:', EMAILJS_SERVICE_ID ? '✅ Ada' : '❌ KOSONG');
-console.log('EMAILJS_REMINDER_TEMPLATE_ID:', EMAILJS_REMINDER_TEMPLATE_ID ? '✅ Ada' : '❌ KOSONG');
-console.log('TIMEZONE:', TIMEZONE || 'Asia/Makassar');
-console.log('========================\n');
-
-// Inisialisasi dengan Public Key DAN Private Key
 emailjs.init({
   publicKey: EMAILJS_PUBLIC_KEY,
   privateKey: EMAILJS_PRIVATE_KEY
 });
 
-// ========== TIMEZONE UTILITIES ==========
 function getNowInTimezone(tz) {
   if (!tz || tz === 'auto') return new Date();
   try {
@@ -57,7 +45,6 @@ function getTodayStr(tz) {
          String(now.getDate()).padStart(2, '0');
 }
 
-// ========== GIST API ==========
 async function getGistData() {
   const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
     headers: { Authorization: `token ${GITHUB_TOKEN}` }
@@ -78,14 +65,99 @@ async function updateGist(state) {
   });
 }
 
+function getLevel(exp) { return Math.floor(exp / 100) + 1; }
+
+function getActiveQuestsForToday(state, dayIndex) {
+  let activeQuests = state.quests.filter(q => q.days && q.days.includes(dayIndex));
+  const scheduled = state.scheduledQuests[dayIndex.toString()] || [];
+  scheduled.forEach(sq => {
+    activeQuests.push({
+      id: 'sched_' + dayIndex + '_' + sq.text.replace(/\s/g, '_'),
+      text: sq.text,
+      stat: sq.stat,
+      isScheduled: true
+    });
+  });
+  return activeQuests;
+}
+
+// ========== KIRIM DAILY QUEST REPORT ==========
+async function sendDailyQuestReport(state, now) {
+  const todayIndex = now.getDay();
+  const todayStr = getTodayStr(TIMEZONE);
+  
+  // Cek apakah sudah dikirim hari ini
+  if (state.lastDailySent === todayStr) {
+    console.log('📅 Daily quest sudah dikirim hari ini, skip');
+    return false;
+  }
+  
+  const activeQuests = getActiveQuestsForToday(state, todayIndex);
+  
+  // Buat daftar quest dalam format teks
+  let questList = '';
+  activeQuests.forEach((q, idx) => {
+    const completed = state.completedQuests[idx] ? '[✅]' : '[⬜]';
+    questList += `${completed} ${q.text} (+${q.stat})\n`;
+  });
+  
+  const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const formattedDate = `${days[todayIndex]}, ${now.getDate()} ${getMonthName(now.getMonth())} ${now.getFullYear()}`;
+  
+  const level = getLevel(state.totalExp);
+  const streak = state.streak || 0;
+  
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_DAILY_TEMPLATE_ID, {
+      player_name: state.playerName || 'Player',
+      daily_date: formattedDate,
+      quest_list: questList,
+      current_level: level,
+      current_streak: streak
+    });
+    console.log(`✅ Daily quest report terkirim untuk ${formattedDate}`);
+    return true;
+  } catch(err) {
+    console.log(`❌ Gagal kirim daily quest:`, err.message);
+    return false;
+  }
+}
+
+function getMonthName(month) {
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  return months[month];
+}
+
+// ========== KIRIM REMINDER BIASA ==========
+async function sendReminder(reminder, state, todayStr) {
+  try {
+    const templateParams = {
+      player_name: state.playerName || 'Player',
+      reminder_message: reminder.message,
+      time: reminder.time
+    };
+    
+    const result = await emailjs.send(
+      EMAILJS_SERVICE_ID, 
+      EMAILJS_REMINDER_TEMPLATE_ID, 
+      templateParams
+    );
+    console.log(`✅ Reminder ${reminder.time} terkirim via email (status: ${result.status})`);
+    return true;
+  } catch(err) {
+    console.log(`❌ Gagal kirim reminder ${reminder.time}: ${err.message || 'unknown error'}`);
+    return false;
+  }
+}
+
 // ========== MAIN ==========
 (async () => {
   try {
     console.log('🔄 Memeriksa reminder...');
     const state = await getGistData();
     
-    if (!state || !state.reminders || state.reminders.length === 0) {
-      console.log('⚠️ Tidak ada data reminder.');
+    if (!state) {
+      console.log('⚠️ Tidak ada data.');
       return;
     }
 
@@ -97,44 +169,40 @@ async function updateGist(state) {
 
     console.log(`🕐 Waktu sekarang: ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} WITA`);
     console.log(`📅 Hari ini: ${['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'][today]}, ${todayStr}`);
-    console.log(`📋 Total reminder: ${state.reminders.length}`);
 
-    for (const reminder of state.reminders) {
-      if (!reminder.enabled) continue;
-      if (!reminder.days || !reminder.days.includes(today)) continue;
+    // ========== CEK DAILY QUEST REPORT (Jam 6 Pagi) ==========
+    // 6:00 = 360 menit
+    if (currentMinutes >= 360 && currentMinutes < 365) {
+      console.log('📧 Mengecek daily quest report (jam 6 pagi)...');
+      const sent = await sendDailyQuestReport(state, now);
+      if (sent) {
+        state.lastDailySent = todayStr;
+        modified = true;
+      }
+    } else {
+      console.log(`⏳ Daily quest report: belum waktunya (${currentMinutes} menit, target 360-365)`);
+    }
 
-      const [h, m] = reminder.time.split(':').map(Number);
-      const reminderMinutes = h * 60 + m;
+    // ========== CEK REMINDER BIASA ==========
+    if (state.reminders && state.reminders.length > 0) {
+      console.log(`📋 Total reminder biasa: ${state.reminders.length}`);
+      
+      for (const reminder of state.reminders) {
+        if (!reminder.enabled) continue;
+        if (!reminder.days || !reminder.days.includes(today)) continue;
 
-      // Cek dalam rentang 5 menit terakhir
-      if (reminderMinutes <= currentMinutes && reminderMinutes > currentMinutes - 5) {
-        if (reminder.lastSent !== todayStr) {
-          reminder.lastSent = todayStr;
-          modified = true;
+        const [h, m] = reminder.time.split(':').map(Number);
+        const reminderMinutes = h * 60 + m;
 
-          try {
-            const templateParams = {
-              player_name: state.playerName || 'Player',
-              reminder_message: reminder.message,
-              time: reminder.time
-            };
-            
-            console.log(`📧 Mengirim email ke ${EMAILJS_REMINDER_TEMPLATE_ID}...`);
-            
-            const result = await emailjs.send(
-              EMAILJS_SERVICE_ID, 
-              EMAILJS_REMINDER_TEMPLATE_ID, 
-              templateParams
-            );
-            console.log(`✅ Reminder ${reminder.time} terkirim via email (status: ${result.status})`);
-          } catch(err) {
-            console.log(`❌ Gagal kirim reminder ${reminder.time}:`);
-            console.log(`   Message: ${err.message || 'tidak ada'}`);
-            console.log(`   Status: ${err.status || 'tidak ada'}`);
-            if (err.text) console.log(`   Text: ${err.text}`);
+        // Cek dalam rentang 5 menit terakhir
+        if (reminderMinutes <= currentMinutes && reminderMinutes > currentMinutes - 5) {
+          if (reminder.lastSent !== todayStr) {
+            reminder.lastSent = todayStr;
+            modified = true;
+            await sendReminder(reminder, state, todayStr);
+          } else {
+            console.log(`⏭ Reminder ${reminder.time} sudah dikirim hari ini, skip`);
           }
-        } else {
-          console.log(`⏭ Reminder ${reminder.time} sudah dikirim hari ini, skip`);
         }
       }
     }
@@ -143,7 +211,7 @@ async function updateGist(state) {
       await updateGist(state);
       console.log('💾 Status pengiriman diperbarui di Gist.');
     } else {
-      console.log('✅ Tidak ada reminder yang perlu dikirim.');
+      console.log('✅ Tidak ada yang perlu dikirim.');
     }
 
   } catch (err) {
