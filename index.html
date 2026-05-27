@@ -810,6 +810,7 @@
         allQuestsDone: false,
         hasCustomQuest: false,
         timezone: 'Asia/Makassar',
+        questVersion: 0,  // <-- TAMBAHKAN INI
         reminders: [
           { id: '1', time: '08:00', message: 'Waktunya selesaikan quest pagi! 🔥', enabled: true, days: [0, 1, 2, 3, 4, 5, 6] },
           { id: '2', time: '20:00', message: 'Jangan lupa check-in dan evaluasi hari ini! 📝', enabled: true, days: [0, 1, 2, 3, 4, 5, 6] }
@@ -1624,9 +1625,21 @@
         document.getElementById('githubToken').value = githubToken;
         document.getElementById('gistId').value = gistId;
 
+        // === FORCE UPDATE MECHANISM ===
+        const CURRENT_QUEST_VERSION = 1; // Naikkan angka ini setiap kali ada perubahan DEFAULT_QUESTS
+
         const saved = localStorage.getItem('solo_pro_max_local');
         if (saved) {
           try { state = { ...state, ...JSON.parse(saved) }; } catch (e) { }
+        }
+
+        // Deteksi versi quest
+        if (state.questVersion !== CURRENT_QUEST_VERSION) {
+          console.log('🔄 Quest versi lama terdeteksi, memperbarui ke versi terbaru...');
+          state.quests = JSON.parse(JSON.stringify(DEFAULT_QUESTS));
+          state.questVersion = CURRENT_QUEST_VERSION;
+          state.completedQuests = new Array(state.quests.length).fill(false);
+          showMessage('📋 Quest diperbarui ke versi terbaru!', 6000);
         }
 
         state.scheduledQuests = state.scheduledQuests || {};
