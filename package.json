@@ -1,0 +1,9 @@
+{
+  "name": "solo-leveling-reminder",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@emailjs/nodejs": "^4.0.0",
+    "node-fetch": "2"
+  }
+}

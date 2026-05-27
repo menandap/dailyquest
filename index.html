@@ -944,8 +944,9 @@
         }
       }
 
+      // ============ NOTIFIKASI BROWSER (BONUS SAAT WEB DIBUKA) ============
       function sendNotification(title, body, icon = '⚔️') {
-        // Coba notifikasi browser
+        // Hanya notifikasi browser
         if (notificationPermission === 'granted') {
           try {
             const notif = new Notification(title, {
@@ -958,37 +959,16 @@
             notif.onclick = () => { window.focus(); notif.close(); };
             setTimeout(() => notif.close(), 10000);
             console.log('✅ Notifikasi browser terkirim');
-            return;
-          } catch (e) { console.log('Browser notification gagal, fallback ke email'); }
+          } catch (e) {
+            console.log('Browser notification gagal');
+          }
         }
-
-        // Fallback ke EmailJS
-        const activeQuests = getActiveQuestsForToday();
-        const questListStr = activeQuests.map((q, i) => `${i + 1}. ${q.text}`).join('\n');
-        const templateParams = {
-          to_name: state.playerName || 'Player',
-          player_name: state.playerName || 'Player',
-          title: title,
-          message: body,
-          quest_list: questListStr,
-          daily_date: getToday(),
-          current_level: getLevel(state.totalExp),
-          current_streak: state.streak || 0
-        };
-
-        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams)
-          .then(function (response) {
-            console.log('✅ Email terkirim!', response.status);
-            showMessage('📧 Notifikasi email terkirim! Cek inbox.');
-          }, function (err) {
-            console.log('❌ Gagal kirim email:', err);
-            showMessage('❌ Gagal mengirim notifikasi email. Periksa konfigurasi EmailJS.');
-          });
+        // Email akan dikirim oleh GitHub Actions cron job (tidak perlu fallback di sini)
       }
 
-      // Fungsi khusus untuk notifikasi reminder (tanpa quest list)
+      // ============ NOTIFIKASI REMINDER (BONUS SAAT WEB DIBUKA) ============
       function sendReminderNotification(message) {
-        // Browser notification (jika bisa)
+        // Hanya notifikasi browser saat web terbuka
         if (notificationPermission === 'granted') {
           try {
             new Notification('⚔️ Solo Leveling Reminder', {
@@ -998,59 +978,12 @@
               requireInteraction: true,
             });
             console.log('✅ Reminder browser terkirim');
-            // Jika browser berhasil, tetap kirim Telegram sebagai backup
-            sendTelegramNotification(message);
-            return;
           } catch (e) {
-            console.log('Browser notification gagal, fallback ke email & Telegram');
+            console.log('Browser notification gagal');
           }
         }
-
-        // Email fallback
-        const templateParams = {
-          player_name: state.playerName || 'Player',
-          reminder_message: message,
-          time: getCurrentTimeString()
-        };
-        emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_REMINDER_TEMPLATE_ID, templateParams)
-          .then(() => console.log('✅ Email reminder terkirim'))
-          .catch(e => console.log('❌ Email reminder gagal:', e));
-
-        // TELEGRAM (pasti sampai!)
-        sendTelegramNotification(message);
-      }
-
-
-      async function sendTelegramNotification(message) {
-        const TELEGRAM_BOT_TOKEN = "8832821759:AAHVt3CvrYpJlH6OKFfculQ0N3fiA8UVdGs";
-        const TELEGRAM_CHAT_ID = "1196496344";
-
-        // Ambil waktu langsung di sini
-        const now = getNowInTimezone();
-        const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-        const text = `⚔️ Solo Leveling Reminder\n\n${message}\n\n🕐 ${timeStr} WITA`;
-
-        try {
-          const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: TELEGRAM_CHAT_ID,
-              text: text,
-              parse_mode: 'HTML'
-            })
-          });
-          const data = await response.json();
-          if (data.ok) {
-            console.log('✅ Telegram terkirim');
-          } else {
-            console.log('❌ Telegram gagal:', data.description);
-          }
-        } catch (e) {
-          console.log('❌ Telegram gagal:', e);
-        }
+        // Email reminder akan dikirim oleh GitHub Actions cron job
+        // Tidak perlu fallback EmailJS atau Telegram di sini
       }
 
       function clearAllReminderTimers() {
