@@ -2,25 +2,19 @@ name: Solo Leveling Reminder Cron
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Setiap 5 menit
-  workflow_dispatch:        # Bisa dijalankan manual
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
 
 jobs:
   send-reminders:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
-
-      - name: Install dependencies
-        run: npm install @emailjs/nodejs node-fetch@2
-
-      - name: Run reminder script
+      - run: npm install @emailjs/nodejs node-fetch@2
+      - run: node send-reminders.js
         env:
           GITHUB_TOKEN: ${{ secrets.GIST_TOKEN }}
           GIST_ID: ${{ secrets.GIST_ID }}
@@ -28,6 +22,5 @@ jobs:
           EMAILJS_PRIVATE_KEY: ${{ secrets.EMAILJS_PRIVATE_KEY }}
           EMAILJS_SERVICE_ID: ${{ secrets.EMAILJS_SERVICE_ID }}
           EMAILJS_REMINDER_TEMPLATE_ID: ${{ secrets.EMAILJS_REMINDER_TEMPLATE_ID }}
-          EMAILJS_DAILY_TEMPLATE_ID: ${{ secrets.EMAILJS_DAILY_TEMPLATE_ID }}  # ← TAMBAHKAN
+          EMAILJS_DAILY_TEMPLATE_ID: ${{ secrets.EMAILJS_DAILY_TEMPLATE_ID }}
           TIMEZONE: 'Asia/Makassar'
-        run: node send-reminders.js
