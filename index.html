@@ -750,37 +750,6 @@
     const EMAILJS_TEMPLATE_ID = "template_knzkzyg"; // Template ID dari EmailJS
     const EMAILJS_REMINDER_TEMPLATE_ID = "template_bbfjrph";
 
-    async function sendTelegramNotification(message) {
-      const TELEGRAM_BOT_TOKEN = "8832821759:AAHVt3CvrYpJlH6OKFfculQ0N3fiA8UVdGs";
-      const TELEGRAM_CHAT_ID = "1196496344";
-
-      // Ambil waktu langsung di sini
-      const now = getNowInTimezone();
-      const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-
-      const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
-      const text = `⚔️ Solo Leveling Reminder\n\n${message}\n\n🕐 ${timeStr} WITA`;
-
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            chat_id: TELEGRAM_CHAT_ID,
-            text: text,
-            parse_mode: 'HTML'
-          })
-        });
-        const data = await response.json();
-        if (data.ok) {
-          console.log('✅ Telegram terkirim');
-        } else {
-          console.log('❌ Telegram gagal:', data.description);
-        }
-      } catch (e) {
-        console.log('❌ Telegram gagal:', e);
-      }
-    }
 
     emailjs.init(EMAILJS_PUBLIC_KEY);
     // ==============================================
@@ -1049,6 +1018,39 @@
 
         // TELEGRAM (pasti sampai!)
         sendTelegramNotification(message);
+      }
+
+
+      async function sendTelegramNotification(message) {
+        const TELEGRAM_BOT_TOKEN = "8832821759:AAHVt3CvrYpJlH6OKFfculQ0N3fiA8UVdGs";
+        const TELEGRAM_CHAT_ID = "1196496344";
+
+        // Ambil waktu langsung di sini
+        const now = getNowInTimezone();
+        const timeStr = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+        const text = `⚔️ Solo Leveling Reminder\n\n${message}\n\n🕐 ${timeStr} WITA`;
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: TELEGRAM_CHAT_ID,
+              text: text,
+              parse_mode: 'HTML'
+            })
+          });
+          const data = await response.json();
+          if (data.ok) {
+            console.log('✅ Telegram terkirim');
+          } else {
+            console.log('❌ Telegram gagal:', data.description);
+          }
+        } catch (e) {
+          console.log('❌ Telegram gagal:', e);
+        }
       }
 
       function clearAllReminderTimers() {
